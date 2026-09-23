@@ -1,54 +1,69 @@
 import streamlit as st
-import pandas as pd # Ci serve per creare la tabella dati
 
-st.title("📊 Cruscotto Direzionale Scorte (DSS)")
-
-# ==========================================
-# 1. st.metric (I numeri che contano)
-# ==========================================
-st.subheader("Indicatori Chiave (KPI)")
-st.write("st.metric crea quei bellissimi riquadri con il numero in grande e la variazione in piccolo.")
-
-# Usiamo st.columns per metterli uno di fianco all'altro
-col1, col2, col3 = st.columns(3)
-
-# La metrica base
-col1.metric(label="Lotto Ottimale (EOQ)", value="150 colli")
-
-# La metrica con variazione (delta). Di default, positivo è verde.
-col2.metric(label="Scorta di Sicurezza", value="45 colli", delta="+12 colli da ieri")
-
-# Se una variazione in aumento è negativa (es. i costi salgono), possiamo invertire il colore 
-# usando delta_color="inverse". L'aumento diventa rosso.
-col3.metric(label="Costo Totale Logistico", value="€ 1.250", delta="€ 350", delta_color="inverse")
-
-st.divider()
-
-# Creiamo un piccolo database inventato per fare l'esempio delle tabelle
-dati_magazzino = pd.DataFrame({
-    "Prodotto": ["Hamburger di Manzo", "Insalata Iceberg", "Bicchieri Carta"],
-    "Giacenza (colli)": [40, 15, 300],
-    "Valore a Scaffale (€)": [1200, 45, 150],
-    "Stato Rifornimento": ["Urgente", "Nella norma", "Eccesso"]
-})
+st.set_page_config(layout="wide") # Consente di usare tutto lo schermo, non solo il centro
+st.title("🍔 Sistema di Gestione HAVI-McDonald's")
 
 # ==========================================
-# 2. st.dataframe (La tabella interattiva)
+# 1. st.sidebar (Il Menu Laterale)
 # ==========================================
-st.subheader("Visione Operativa (st.dataframe)")
-st.write("Questa è una tabella 'viva'. L'utente può scorrere, allargare le colonne, ordinarle cliccando sull'intestazione e scaricare i dati in CSV passando il mouse in alto a destra. Perfetta per elenchi con centinaia di righe.")
+# Tutto ciò che ha la parola "sidebar" finirà nella colonna grigia a sinistra dello schermo
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/3/36/McDonald%27s_Golden_Arches.svg", width=100)
+st.sidebar.title("Pannello di Controllo")
+st.sidebar.write("Usa le opzioni qui sotto per impostare il calcolo.")
 
-# Mostra la tabella interattiva
-st.dataframe(dati_magazzino)
-
-st.write("---")
+# Anche gli input possono stare nella sidebar!
+categoria = st.sidebar.selectbox("Reparto:", ["Cella Negativa (Carne)", "Cella Positiva (Verdura)"])
+giorni_copertura = st.sidebar.slider("Giorni copertura desiderati:", 1, 30, 7)
 
 # ==========================================
-# 3. st.table (La tabella statica da report)
+# 2. st.tabs (Le Schede di Navigazione)
 # ==========================================
-st.subheader("Visione Report (st.table)")
-st.write("Questa è una tabella statica, come quella di un documento PDF. Occupa tutto lo schermo in larghezza, non ha barre di scorrimento, l'utente non può cliccarci sopra o ordinarla. Perfetta per riepiloghi finali corti o ricevute d'ordine.")
+# Crea dei bottoni in alto in stile "browser" per passare da una pagina all'altra
+tab1, tab2, tab3 = st.tabs(["📝 Inserimento Dati", "📊 Analisi e Grafici", "⚙️ Impostazioni Tecniche"])
 
-# Mostra la tabella statica
-st.table(dati_magazzino)
+# --- CONTENUTO DELLA TAB 1 ---
+with tab1:
+    st.header("Caricamento Vendite Storiche")
+    st.file_uploader("Carica Excel delle casse", type=["csv", "xlsx"])
+    st.write("Le vendite del reparto **" + categoria + "** determineranno il lotto economico (EOQ).")
+    
+# --- CONTENUTO DELLA TAB 2 ---
+with tab2:
+    st.header("Risultati Ottimizzazione")
+    
+    # ==========================================
+    # 3. st.columns (Affiancare gli elementi)
+    # ==========================================
+    # Creiamo due colonne per mostrare le metriche una accanto all'altra
+    col_sinistra, col_destra = st.columns(2)
+    
+    # Per scrivere dentro la colonna, usiamo il suo nome al posto di "st."
+    with col_sinistra:
+        st.subheader("La situazione attuale")
+        st.metric(label="Scorte in cella", value="45 colli", delta="-10 colli")
+        st.write("Il livello è sceso sotto il punto di riordino di sicurezza.")
+        
+    with col_destra:
+        st.subheader("L'azione richiesta")
+        st.metric(label="Ordine da inviare (EOQ)", value="150 colli", delta="Ottimale", delta_color="normal")
+        st.button("Invia Ordine a HAVI", type="primary") # type="primary" fa diventare il bottone colorato e in risalto
 
+# --- CONTENUTO DELLA TAB 3 ---
+with tab3:
+    st.header("Parametri Algoritmo Avanzato")
+    
+    # ==========================================
+    # 4. st.expander (Il menu a tendina nascosto)
+    # ==========================================
+    # Perfetto per nascondere impostazioni che servono raramente
+    st.write("Questi parametri determinano il calcolo dell'EOQ e del Reorder Point.")
+    
+    # Tutto ciò che è dentro l'expander si vedrà solo se l'utente clicca sul titolo
+    with st.expander("Mostra/Nascondi costi fissi e variabili"):
+        st.write("Qui puoi modificare le costanti di sistema se cambiano le tariffe logistiche.")
+        costo_ordine = st.number_input("Costo per singolo ordine emesso (S):", value=25.0)
+        costo_mantenimento = st.number_input("Costo di mantenimento annuo (H):", value=4.5)
+        
+    with st.expander("Dettagli Matematici (Z-Score)"):
+        st.write("Il calcolo della Scorta di Sicurezza usa la curva di Gauss.")
+        st.selectbox("Livello di Servizio:", ["90% (Z=1.28)", "95% (Z=1.65)", "99% (Z=2.33)"])
