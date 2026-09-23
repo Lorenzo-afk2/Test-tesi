@@ -1,40 +1,54 @@
 import streamlit as st
+import pandas as pd # Ci serve per creare la tabella dati
 
-st.header("📦 Aggiunta Nuovo Prodotto al Database")
+st.title("📊 Cruscotto Direzionale Scorte (DSS)")
 
-# 1. st.text_input (Testo libero)
-# Perfetto per far digitare nomi, codici a barre o descrizioni
-nome_prodotto = st.text_input("Nome del nuovo prodotto:", placeholder="Es. Nuova Salsa Barbecue")
+# ==========================================
+# 1. st.metric (I numeri che contano)
+# ==========================================
+st.subheader("Indicatori Chiave (KPI)")
+st.write("st.metric crea quei bellissimi riquadri con il numero in grande e la variazione in piccolo.")
 
-# 2. st.multiselect (Scelta multipla)
-# A differenza della selectbox, qui l'utente può cliccare più di una voce
-zone_stoccaggio = st.multiselect(
-    "In quali zone può essere stoccato?",
-    ["Cella Frigo Positiva (Fresco)", "Cella Frigo Negativa (Surgelato)", "Magazzino (Secco)"]
-)
+# Usiamo st.columns per metterli uno di fianco all'altro
+col1, col2, col3 = st.columns(3)
 
-# 3. st.number_input (Inserimento numeri esatti)
-# Usiamo i parametri min_value e step per controllare i tastini + e -
-costo_unitario = st.number_input("Costo d'acquisto per collo (€):", min_value=0.0, step=0.50)
+# La metrica base
+col1.metric(label="Lotto Ottimale (EOQ)", value="150 colli")
 
-# 4. st.slider (Barra a scorrimento)
-# Ottimo per percentuali o range visivi (da 80 a 100 in questo caso)
-livello_servizio = st.slider("Livello di Servizio Desiderato (%):", min_value=80, max_value=100, value=95)
+# La metrica con variazione (delta). Di default, positivo è verde.
+col2.metric(label="Scorta di Sicurezza", value="45 colli", delta="+12 colli da ieri")
+
+# Se una variazione in aumento è negativa (es. i costi salgono), possiamo invertire il colore 
+# usando delta_color="inverse". L'aumento diventa rosso.
+col3.metric(label="Costo Totale Logistico", value="€ 1.250", delta="€ 350", delta_color="inverse")
+
+st.divider()
+
+# Creiamo un piccolo database inventato per fare l'esempio delle tabelle
+dati_magazzino = pd.DataFrame({
+    "Prodotto": ["Hamburger di Manzo", "Insalata Iceberg", "Bicchieri Carta"],
+    "Giacenza (colli)": [40, 15, 300],
+    "Valore a Scaffale (€)": [1200, 45, 150],
+    "Stato Rifornimento": ["Urgente", "Nella norma", "Eccesso"]
+})
+
+# ==========================================
+# 2. st.dataframe (La tabella interattiva)
+# ==========================================
+st.subheader("Visione Operativa (st.dataframe)")
+st.write("Questa è una tabella 'viva'. L'utente può scorrere, allargare le colonne, ordinarle cliccando sull'intestazione e scaricare i dati in CSV passando il mouse in alto a destra. Perfetta per elenchi con centinaia di righe.")
+
+# Mostra la tabella interattiva
+st.dataframe(dati_magazzino)
 
 st.write("---")
 
-# 5. st.button (Pulsante di azione)
-# Tutto ciò che è indentato sotto l'if viene eseguito SOLO quando l'utente clicca il bottone
-if st.button("Salva Prodotto nel Sistema"):
-    
-    # Facciamo un piccolo controllo di sicurezza: ha inserito il nome?
-    if nome_prodotto == "":
-        st.error("Errore: Devi inserire il nome del prodotto prima di salvare!")
-    else:
-        st.success(f"✅ Il prodotto '{nome_prodotto}' è stato registrato con successo!")
-        
-        # Mostriamo il riepilogo di ciò che ha inserito usando st.write
-        st.write("**Riepilogo dati inseriti:**")
-        st.write(f"- Costo: {costo_unitario} €")
-        st.write(f"- Livello servizio: {livello_servizio} %")
-        st.write(f"- Zone autorizzate: {zone_stoccaggio}")
+# ==========================================
+# 3. st.table (La tabella statica da report)
+# ==========================================
+st.subheader("Visione Report (st.table)")
+st.write("Questa è una tabella statica, come quella di un documento PDF. Occupa tutto lo schermo in larghezza, non ha barre di scorrimento, l'utente non può cliccarci sopra o ordinarla. Perfetta per riepiloghi finali corti o ricevute d'ordine.")
+
+# Mostra la tabella statica
+st.table(dati_magazzino)
+
