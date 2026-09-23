@@ -4,7 +4,7 @@ st.title("Test Colori e Dimensioni")
 
 # 1. Metodo Standard (Il modo in cui Streamlit VUOLE che tu faccia)
 st.write("Questo è il testo normale.")
-st.write("Questo è in **grassetto**.")
+st.write("Questo è in *corsivo*.")
 
 st.divider()
 
