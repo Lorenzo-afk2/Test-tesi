@@ -1,41 +1,53 @@
 import streamlit as st
-import math
 
-st.title("Calcolatore EOQ Semplificato")
+st.title("Impostazioni Parametri per Categoria")
 
-# L'utente inserisce i dati
-domanda = st.number_input("Domanda annua:", value=1000)
-costo_s = st.number_input("Costo ordine (€):", value=50)
-costo_h = st.number_input("Costo mantenimento (€):", value=2.5)
-
-# Il blocco del pulsante
-if st.button("Calcola l'Ordine Perfetto"):
-    
-    # Questo codice (rientrato) parte SOLO se premo il pulsante
-    risultato = math.sqrt((2 * domanda * costo_s) / costo_h)
-    
-    # st.success è come st.write, ma disegna un bel box verde!
-    st.success(f"Dovresti ordinare {round(risultato)} pezzi alla volta.")
-
-
-# Titolo della pagina di test
-st.title("Test Menu a Tendina per la Tesi")
-
-# Creazione del menu a tendina
-scelta_livello = st.selectbox(
-    "Seleziona il Livello di Servizio (Rischio rottura di stock):",
-    ["90% (Standard base)", "95% (Standard medio)", "99% (Alta priorità)"]
+# 1. Creazione del menu a tendina
+categoria = st.selectbox(
+    "Seleziona la Categoria del Prodotto:",
+    ["Scegli un'opzione...", "Fresco (Es. Insalata)", "Congelato (Es. Hamburger)", "Secco (Es. Bicchieri)"]
 )
 
-# Output dinamico in base alla scelta
-st.write(f"Il sistema imposterà i calcoli basandosi su: **{scelta_livello}**")
+# 2. Logica condizionale (if/elif)
+# Se l'utente non ha ancora scelto nulla, mostriamo un messaggio
+if categoria == "Scegli un'opzione...":
+    st.info("Seleziona una categoria per visualizzare i parametri logistici associati.")
 
-# Esempio di logica collegata (come funzionerà nel tuo software)
-if "90%" in scelta_livello:
-    st.info("Valore Z applicato: 1.28")
-elif "95%" in scelta_livello:
-    st.info("Valore Z applicato: 1.65")
-else:
-    st.info("Valore Z applicato: 2.33 (Scorta di sicurezza massima)")
+# Se seleziona "Fresco"
+elif categoria == "Fresco (Es. Insalata)":
+    st.write("### Parametri Operativi - Reparto Fresco")
+    # Costo di mantenimento alto (rischio scadenza)
+    costo_mantenimento = st.number_input("Costo di Mantenimento (H) €", value=4.50, min_value=0.0)
+    # Livello di servizio medio (se finisce l'insalata non è tragico come finire la carne)
+    livello_servizio = st.selectbox("Livello di Servizio Desiderato:", ["90%", "95%", "98%"], index=1)
+    
+    st.warning("Attenzione: I prodotti freschi hanno un alto rischio di obsolescenza. L'algoritmo terrà l'EOQ molto basso.")
+
+# Se seleziona "Congelato"
+elif categoria == "Congelato (Es. Hamburger)":
+    st.write("### Parametri Operativi - Cella Negativa")
+    # Costo mantenimento altissimo (consumo elettrico)
+    costo_mantenimento = st.number_input("Costo di Mantenimento (H) €", value=8.00, min_value=0.0)
+    # Livello di servizio massimo (prodotto vitale)
+    livello_servizio = st.selectbox("Livello di Servizio Desiderato:", ["95%", "99%", "99.9% (Consigliato)"], index=2)
+    
+    st.error("Prodotto Core: La rottura di stock non è tollerata. Verrà applicato il Safety Stock massimo (Z=3.09).")
+
+# Se seleziona "Secco"
+elif categoria == "Secco (Es. Bicchieri)":
+    st.write("### Parametri Operativi - Magazzino Ambiente")
+    # Costo mantenimento basso (occupano solo spazio)
+    costo_mantenimento = st.number_input("Costo di Mantenimento (H) €", value=0.50, min_value=0.0)
+    # Livello di servizio standard
+    livello_servizio = st.selectbox("Livello di Servizio Desiderato:", ["90%", "95%", "99%"], index=0)
+    
+    st.success("Prodotti stabili. L'algoritmo ottimizzerà per lotti di grandi dimensioni al fine di ridurre i costi di spedizione.")
+
+# --- ESEMPIO DI STAMPA DEI VALORI (per verificare che funzioni) ---
+if categoria != "Scegli un'opzione...":
+    st.markdown("---")
+    st.write("Le variabili salvate in memoria per la formula sono:")
+    st.write(f"- Valore **H**: {costo_mantenimento} €")
+    st.write(f"- Valore **Servizio**: {livello_servizio}")
 
 
