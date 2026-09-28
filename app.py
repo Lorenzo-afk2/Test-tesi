@@ -1,69 +1,53 @@
 import streamlit as st
+import pandas as pd
+import plotly.express as px  # Importiamo Plotly per i grafici
 
-st.set_page_config(layout="wide") # Consente di usare tutto lo schermo, non solo il centro
-st.title("🍔 Sistema di Gestione HAVI-McDonald's")
+st.set_page_config(layout="wide")
+st.title("📦 Analisi Scorte: Hamburger di Manzo (Core Product)")
 
-# ==========================================
-# 1. st.sidebar (Il Menu Laterale)
-# ==========================================
-# Tutto ciò che ha la parola "sidebar" finirà nella colonna grigia a sinistra dello schermo
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/3/36/McDonald%27s_Golden_Arches.svg", width=100)
-st.sidebar.title("Pannello di Controllo")
-st.sidebar.write("Usa le opzioni qui sotto per impostare il calcolo.")
+# Creiamo due colonne per affiancare l'immagine e il grafico
+col_sinistra, col_destra = st.columns([1, 2]) # La destra è grande il doppio della sinistra
 
-# Anche gli input possono stare nella sidebar!
-categoria = st.sidebar.selectbox("Reparto:", ["Cella Negativa (Carne)", "Cella Positiva (Verdura)"])
-giorni_copertura = st.sidebar.slider("Giorni copertura desiderati:", 1, 30, 7)
-
-# ==========================================
-# 2. st.tabs (Le Schede di Navigazione)
-# ==========================================
-# Crea dei bottoni in alto in stile "browser" per passare da una pagina all'altra
-tab1, tab2, tab3 = st.tabs(["📝 Inserimento Dati", "📊 Analisi e Grafici", "⚙️ Impostazioni Tecniche"])
-
-# --- CONTENUTO DELLA TAB 1 ---
-with tab1:
-    st.header("Caricamento Vendite Storiche")
-    st.file_uploader("Carica Excel delle casse", type=["csv", "xlsx"])
-    st.write("Le vendite del reparto **" + categoria + "** determineranno il lotto economico (EOQ).")
+with col_sinistra:
+    st.subheader("Scheda Prodotto")
     
-# --- CONTENUTO DELLA TAB 2 ---
-with tab2:
-    st.header("Risultati Ottimizzazione")
+    # 1. Spiegazione st.image
+    # st.image serve per mostrare immagini STATICHE (foto, loghi, schemi).
+    # Non ha interattività. Prende un file dal tuo PC o un link web e lo fa vedere.
+    # L'attributo use_container_width=True fa sì che l'immagine occupi tutta la colonna.
     
-    # ==========================================
-    # 3. st.columns (Affiancare gli elementi)
-    # ==========================================
-    # Creiamo due colonne per mostrare le metriche una accanto all'altra
-    col_sinistra, col_destra = st.columns(2)
+    st.image(
+        "https://upload.wikimedia.org/wikipedia/commons/4/4b/McDonald%27s_burger_patties.jpg", 
+        caption="Cartone Standard da 50 pezzi (HAVI Logistics)",
+        use_container_width=True
+    )
     
-    # Per scrivere dentro la colonna, usiamo il suo nome al posto di "st."
-    with col_sinistra:
-        st.subheader("La situazione attuale")
-        st.metric(label="Scorte in cella", value="45 colli", delta="-10 colli")
-        st.write("Il livello è sceso sotto il punto di riordino di sicurezza.")
-        
-    with col_destra:
-        st.subheader("L'azione richiesta")
-        st.metric(label="Ordine da inviare (EOQ)", value="150 colli", delta="Ottimale", delta_color="normal")
-        st.button("Invia Ordine a HAVI", type="primary") # type="primary" fa diventare il bottone colorato e in risalto
+    st.write("Questo è il prodotto ad alta rotazione che stiamo analizzando.")
 
-# --- CONTENUTO DELLA TAB 3 ---
-with tab3:
-    st.header("Parametri Algoritmo Avanzato")
+with col_destra:
+    st.subheader("Andamento Livello Scorte (Ultimi 5 Giorni)")
     
-    # ==========================================
-    # 4. st.expander (Il menu a tendina nascosto)
-    # ==========================================
-    # Perfetto per nascondere impostazioni che servono raramente
-    st.write("Questi parametri determinano il calcolo dell'EOQ e del Reorder Point.")
+    # Prepariamo dei dati inventati per far funzionare il grafico
+    dati_finti = pd.DataFrame({
+        "Giorno": ["Lun", "Mar", "Mer", "Gio", "Ven"],
+        "Pezzi in Cella": [200, 150, 90, 250, 180] # Il giovedì è arrivato il rifornimento (EOQ)
+    })
     
-    # Tutto ciò che è dentro l'expander si vedrà solo se l'utente clicca sul titolo
-    with st.expander("Mostra/Nascondi costi fissi e variabili"):
-        st.write("Qui puoi modificare le costanti di sistema se cambiano le tariffe logistiche.")
-        costo_ordine = st.number_input("Costo per singolo ordine emesso (S):", value=25.0)
-        costo_mantenimento = st.number_input("Costo di mantenimento annuo (H):", value=4.5)
-        
-    with st.expander("Dettagli Matematici (Z-Score)"):
-        st.write("Il calcolo della Scorta di Sicurezza usa la curva di Gauss.")
-        st.selectbox("Livello di Servizio:", ["90% (Z=1.28)", "95% (Z=1.65)", "99% (Z=2.33)"])
+    # Prima: Diciamo a Plotly Express di "costruire" un grafico a linee
+    grafico_linee = px.line(
+        dati_finti, 
+        x="Giorno", 
+        y="Pezzi in Cella", 
+        markers=True, # Mette un pallino su ogni giorno
+        title="Modello a dente di sega (Simulazione)"
+    )
+    
+    # 2. Spiegazione st.plotly_chart
+    # st.plotly_chart è il "proiettore". Prende l'oggetto matematico creato da Plotly 
+    # e lo stampa sullo schermo del tuo iPad rendendolo INTERATTIVO.
+    # L'utente può zoomare, scorrere o scaricare il grafico come immagine (PNG).
+    
+    st.plotly_chart(
+        grafico_linee, 
+        use_container_width=True # Anche qui usiamo questo attributo per allargarlo!
+    )
