@@ -19,7 +19,7 @@ if st.session_state["autenticato"] == False:
     
     if st.button("Accedi"):
         # Controlliamo se le credenziali sono corrette (qui usiamo admin / mcdonalds2024)
-        if username == "admin" and password == "mcdonalds2024":
+        if username == "Admin" and password == "Mcdonalds2024":
             st.session_state["autenticato"] = True # Salviamo in memoria che l'utente è loggato
             st.rerun() # Ricarica la pagina istantaneamente per mostrare l'app
         else:
