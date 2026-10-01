@@ -6,9 +6,36 @@ import plotly.express as px
 import os
 
 # =====================================================================
-# 1. SETUP INIZIALE E CSS
+# 1. SETUP INIZIALE E CSS ESTESO (Aggiunte le metriche blu)
 # =====================================================================
 st.set_page_config(page_title="HAVIConnect - Ordini", layout="wide", initial_sidebar_state="expanded")
+
+# Aggiungiamo un po' di CSS extra per le due metriche di consumo
+st.markdown("""
+<style>
+.metric-box {
+    background-color: #003366 !important; /* Blu HAVI */
+    border-radius: 10px !important;
+    padding: 20px !important;
+    text-align: center !important;
+    border-bottom: 4px solid #ffc107 !important; /* Giallo McDonald's */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2) !important;
+}
+.metric-title {
+    color: #ffffff !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+.metric-value {
+    color: #ffc107 !important;
+    font-size: 38px !important;
+    font-weight: 900 !important;
+    margin: 5px 0px !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
 if os.path.exists("style.css"):
     with open("style.css") as f:
@@ -104,7 +131,6 @@ def genera_database_simulato(nome_prodotto):
 
 df_storico = genera_database_simulato(prodotto_scelto)
 
-# Calcoli delle domande per la nuova sezione
 d_media = df_storico['Domanda_Scatole'].mean()
 sigma = df_storico['Domanda_Scatole'].std()
 D_annua = d_media * 365
@@ -113,20 +139,30 @@ z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
 z = z_scores[livello_servizio]
 
 # =====================================================================
-# 7. NUOVA SEZIONE: DATI DI CONSUMO (RIGA 4)
+# 7. NUOVA SEZIONE: DATI DI CONSUMO EVIDENZIATI CON STILE HAVI
 # =====================================================================
 st.markdown("---")
-st.markdown("### 📊 Dati di Consumo e Previsione")
+st.markdown("### 📊 Dati Storici di Consumo")
 
 col_dem1, col_dem2 = st.columns(2)
+
 with col_dem1:
-    st.metric(label="Domanda Media Giornaliera (d)", 
-              value=f"{int(d_media)} scatole/giorno", 
-              help="Media calcolata sulle vendite degli ultimi 3 anni simulati.")
+    st.markdown(f"""
+        <div class="metric-box">
+            <div class="metric-title">Domanda Media Giornaliera (d)</div>
+            <div class="metric-value">{int(d_media)}</div>
+            <div style="color: white; font-size: 12px;">Scatole al giorno</div>
+        </div>
+    """, unsafe_allow_html=True)
+
 with col_dem2:
-    st.metric(label="Domanda Annua Stimata (D)", 
-              value=f"{int(D_annua):,} scatole/anno".replace(',', '.'), 
-              help="Proiezione del consumo totale su 365 giorni.")
+    st.markdown(f"""
+        <div class="metric-box">
+            <div class="metric-title">Domanda Annua Stimata (D)</div>
+            <div class="metric-value">{int(D_annua):,}</div>
+            <div style="color: white; font-size: 12px;">Scatole totali previste</div>
+        </div>
+    """.replace(',', '.'), unsafe_allow_html=True) # Sostituisce la virgola delle migliaia col punto
 
 # =====================================================================
 # 8. SIDEBAR: GRAFICI E DATABASE AGGIORNATI
