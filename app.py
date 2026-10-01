@@ -81,7 +81,7 @@ with col_grafico:
     st.subheader("📈 Trend Domanda (Ultimi 30 giorni)")
     fig = px.line(df_storico.tail(30), x='Data', y='Domanda_Scatole', markers=True, color_discrete_sequence=['#DA291C'], line_shape='spline')
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white')
-    fig.add_hline(y=d_media, line_dash="dashed", line_color="#76c04f", annotation_text="Media Giornaliera")
+    fig.add_hline(y=d_media, line_dash="dash", line_color="#76c04f", annotation_text="Media Giornaliera")
     st.plotly_chart(fig, use_container_width=True)
 
 with col_tabella:
