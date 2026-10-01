@@ -10,45 +10,68 @@ import os
 # =====================================================================
 st.set_page_config(page_title="HAVIConnect - Ordini", layout="wide", initial_sidebar_state="expanded")
 
-# Iniezione sicura del file CSS esterno
+# Lettura sicura del file CSS esterno
 if os.path.exists("style.css"):
     with open("style.css") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 
 # =====================================================================
-# 2. SISTEMA DI AUTENTICAZIONE (LOGIN)
+# 2. SISTEMA DI AUTENTICAZIONE (SCHERMATA FEDELE ALL'IMMAGINE)
 # =====================================================================
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
 
 if not st.session_state['autenticato']:
-    st.markdown("<br><br><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2, 1])
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
-    with col2:
-        st.markdown("""
-            <div style="background-color: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0px 10px 20px rgba(0,0,0,0.2); border-top: 5px solid #DA291C;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/McDonald%27s_Golden_Arches.svg/120px-McDonald%27s_Golden_Arches.svg.png" width="80" style="margin-bottom: 20px;">
-                <h2 style="color: #0a111a; margin-bottom: 5px;">HAVIConnect</h2>
-                <p style="color: #7b8898; font-style: italic; margin-bottom: 20px;">Portale Logistico Enterprise</p>
-            </div>
-        """, unsafe_allow_html=True)
+    # Il form di Streamlit funge da contenitore principale per l'effetto "Card"
+    with st.form("login_form"):
+        col_left, col_right = st.columns([1.2, 2])
         
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        with st.form("login_form"):
-            username = st.text_input("👤 ID Dipendente (usa: manager)")
-            password = st.text_input("🔒 Password (usa: logistica)", type="password")
-            submitted = st.form_submit_button("ACCEDI AL SISTEMA")
+        with col_left:
+            st.markdown("""
+                <div class="login-left-panel">
+                    <div class="login-brand-row">
+                        <span class="login-brand-m">M</span>
+                        <span class="login-brand-text">HAVI & McD</span>
+                    </div>
+                    <div class="login-desc">Portale Ottimizzazione Scorte & Riordino Lotti</div>
+                    <div class="login-tag">Nodo Logistico Nord-Ovest</div>
+                    <div class="login-foot-left">Protocollo: TLS 1.3 • Stazione Certificata</div>
+                </div>
+            """, unsafe_allow_html=True)
             
-            if submitted:
-                if username == "manager" and password == "logistica":
-                    st.session_state['autenticato'] = True
-                    st.rerun() 
-                else:
-                    st.error("❌ Credenziali errate. Riprova.")
+        with col_right:
+            st.markdown("""
+                <div class="login-right-header">
+                    <div class="login-title">Accesso Store Manager</div>
+                    <div class="login-status"><span class="login-status-dot">●</span> Server Attivo</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Input nativi Streamlit per agganciarsi al motore Python
+            username = st.text_input("Codice Ristorante o ID Utente", value="IT-1048-MILANO-DUOMO")
+            password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password")
+            
+            # Bottone aggiornato come richiesto
+            submitted = st.form_submit_button("Accedi allo store")
+            
+            st.markdown("""
+                <div class="login-right-footer">
+                    <span>Supporto Tecnico HAVI: Int. 4482</span>
+                    <span>v2.4 DSS Streamlit</span>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        if submitted:
+            if username == "IT-1048-MILANO-DUOMO" and password == "logistica":
+                st.session_state['autenticato'] = True
+                st.rerun() 
+            else:
+                st.error("❌ Credenziali errate. Riprova. (Usa password: logistica)")
     
+    # Blocco vitale: ferma l'esecuzione di tutto il software se non si è loggati
     st.stop() 
 
 
@@ -137,16 +160,28 @@ z = z_scores[livello_servizio]
 
 
 # =====================================================================
-# 7. DATI DI CONSUMO (Le Card Blu - Classe recuperata dal CSS)
+# 7. DATI DI CONSUMO (Utilizzando esplicitamente le classi esterne)
 # =====================================================================
 st.markdown("---")
 st.markdown("### 📊 Dati Storici di Consumo")
 
 col_dem1, col_dem2 = st.columns(2)
 with col_dem1:
-    st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Media Giornaliera (d)</div><div class="metric-value">{int(d_media)}</div><div style="color: white; font-size: 12px;">Scatole al giorno</div></div>""", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div class="metric-box">
+            <div class="metric-title">Domanda Media Giornaliera (d)</div>
+            <div class="metric-value">{int(d_media)}</div>
+            <div class="metric-subtitle">Scatole al giorno</div>
+        </div>
+    """, unsafe_allow_html=True)
 with col_dem2:
-    st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Annua Stimata (D)</div><div class="metric-value">{int(D_annua):,}</div><div style="color: white; font-size: 12px;">Scatole totali previste</div></div>""".replace(',', '.'), unsafe_allow_html=True) 
+    st.markdown(f"""
+        <div class="metric-box">
+            <div class="metric-title">Domanda Annua Stimata (D)</div>
+            <div class="metric-value">{int(D_annua):,}</div>
+            <div class="metric-subtitle">Scatole totali previste</div>
+        </div>
+    """.replace(',', '.'), unsafe_allow_html=True) 
 
 
 # =====================================================================
@@ -196,11 +231,29 @@ rop = (d_media * lead_time) + scorta_sicurezza
 with spazio_algoritmo:
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
-        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Quantità Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole per minimizzare i costi</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="card-kpi">
+                <div class="kpi-titolo">Quantità Ottimale (EOQ)</div>
+                <div class="kpi-valore">{int(eoq)}</div>
+                <div class="kpi-dettaglio">Scatole per minimizzare i costi</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col_kpi2:
-        st.markdown(f"""<div class="card-kpi" style="border-top-color: #f2a900 !important;"><div class="kpi-titolo">Soglia di Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Ordinare a questa giacenza</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="card-kpi card-kpi-yellow">
+                <div class="kpi-titolo">Soglia di Riordino (ROP)</div>
+                <div class="kpi-valore">{int(rop)}</div>
+                <div class="kpi-dettaglio">Ordinare a questa giacenza</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col_kpi3:
-        st.markdown(f"""<div class="card-kpi" style="border-top-color: #76c04f !important;"><div class="kpi-titolo">Scorta di Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura imprevisti</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="card-kpi card-kpi-green">
+                <div class="kpi-titolo">Scorta di Sicurezza (S)</div>
+                <div class="kpi-valore">{int(scorta_sicurezza)}</div>
+                <div class="kpi-dettaglio">Copertura imprevisti</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 
 # =====================================================================
