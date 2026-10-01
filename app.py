@@ -6,18 +6,11 @@ import plotly.express as px
 import os
 
 # =====================================================================
-# 1. SETUP INIZIALE E CSS ESTESO
+# 1. SETUP INIZIALE E COLLEGAMENTO CSS
 # =====================================================================
 st.set_page_config(page_title="HAVIConnect - Ordini", layout="wide", initial_sidebar_state="expanded")
 
-st.markdown("""
-<style>
-.metric-box { background-color: #003366 !important; border-radius: 10px !important; padding: 20px !important; text-align: center !important; border-bottom: 4px solid #ffc107 !important; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2) !important; }
-.metric-title { color: #ffffff !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
-.metric-value { color: #ffc107 !important; font-size: 38px !important; font-weight: 900 !important; margin: 5px 0px !important; }
-</style>
-""", unsafe_allow_html=True)
-
+# Iniezione sicura del file CSS esterno
 if os.path.exists("style.css"):
     with open("style.css") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
@@ -26,11 +19,9 @@ if os.path.exists("style.css"):
 # =====================================================================
 # 2. SISTEMA DI AUTENTICAZIONE (LOGIN)
 # =====================================================================
-# Inizializziamo lo stato della sessione per ricordare se l'utente è loggato
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
 
-# Se NON è autenticato, mostriamo la pagina di Login
 if not st.session_state['autenticato']:
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -46,21 +37,19 @@ if not st.session_state['autenticato']:
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Form di Login
         with st.form("login_form"):
             username = st.text_input("👤 ID Dipendente (usa: manager)")
             password = st.text_input("🔒 Password (usa: logistica)", type="password")
             submitted = st.form_submit_button("ACCEDI AL SISTEMA")
             
             if submitted:
-                # Credenziali di default per la tesi
                 if username == "manager" and password == "logistica":
                     st.session_state['autenticato'] = True
-                    st.rerun() # Ricarica la pagina per far sparire il login
+                    st.rerun() 
                 else:
                     st.error("❌ Credenziali errate. Riprova.")
     
-    st.stop() # FERMA IL CODICE QUI: Se non sei loggato, non puoi vedere il resto!
+    st.stop() 
 
 
 # =====================================================================
@@ -106,10 +95,9 @@ st.markdown(f"### ⚙️ Parametri Operativi per: **{prodotto_scelto}**")
 
 
 # =====================================================================
-# 5. PARAMETRI OPERATIVI (Solo Servizio e Mantenimento)
+# 5. PARAMETRI OPERATIVI (Livello Servizio e Mantenimento)
 # =====================================================================
 col_in1, col_in2 = st.columns(2)
-
 with col_in1:
     livello_servizio = st.selectbox("Livello di Servizio (%)", [90, 95, 99], index=1)
 with col_in2:
@@ -118,7 +106,7 @@ with col_in2:
 
 
 # =====================================================================
-# 6. GENERAZIONE DATABASE E CALCOLI
+# 6. GENERAZIONE DATABASE E CALCOLI STATISTICI
 # =====================================================================
 @st.cache_data 
 def genera_database_simulato(nome_prodotto):
@@ -149,7 +137,7 @@ z = z_scores[livello_servizio]
 
 
 # =====================================================================
-# 7. DATI DI CONSUMO (Le Card Blu)
+# 7. DATI DI CONSUMO (Le Card Blu - Classe recuperata dal CSS)
 # =====================================================================
 st.markdown("---")
 st.markdown("### 📊 Dati Storici di Consumo")
@@ -162,11 +150,11 @@ with col_dem2:
 
 
 # =====================================================================
-# 8. SIDEBAR (Si aggiorna col prodotto)
+# 8. SIDEBAR 
 # =====================================================================
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/McDonald%27s_Golden_Arches.svg/120px-McDonald%27s_Golden_Arches.svg.png", width=60)
 st.sidebar.title("Dati di Supporto")
-tab_grafico, tab_database = st.sidebar.tabs(["📈 Trend Vendite", "📝 Database Storico"])
+tab_grafico, tab_database = st.sidebar.tabs(["📈 Trend", "📝 Database"])
 
 with tab_grafico:
     fig = px.line(df_storico.tail(30), x='Data', y='Domanda_Scatole', markers=True, color_discrete_sequence=['#DA291C'], line_shape='spline')
@@ -179,16 +167,15 @@ with tab_database:
 
 
 # =====================================================================
-# 9. SUGGERIMENTI ALGORITMO (USO DEL CONTAINER)
+# 9. INTESTAZIONE SUGGERIMENTI E CREAZIONE CONTENITORE VUOTO
 # =====================================================================
 st.markdown("---")
 st.subheader("📦 Suggerimenti dell'Algoritmo (Modello EOQ)")
-# Creiamo una "scatola vuota". La riempiremo dopo aver letto i parametri contrattuali in basso!
 spazio_algoritmo = st.container() 
 
 
 # =====================================================================
-# 10. PARAMETRI CONTRATTUALI
+# 10. PARAMETRI CONTRATTUALI (Fondo pagina)
 # =====================================================================
 st.markdown("---")
 st.markdown("### 📄 Parametri Contrattuali")
@@ -200,14 +187,12 @@ with col_c2:
 
 
 # =====================================================================
-# 11. CALCOLO E INSERIMENTO MATEMATICO NEL CONTAINER IN ALTO
+# 11. MATEMATICA E INIEZIONE NEL CONTENITORE IN ALTO
 # =====================================================================
-# Ora che abbiamo TUTTI i dati (compresi i parametri contrattuali), facciamo la matematica
 eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
 scorta_sicurezza = z * sigma * math.sqrt(lead_time)
 rop = (d_media * lead_time) + scorta_sicurezza
 
-# Usiamo il blocco vuoto creato al passo 9 per iniettare i risultati visivamente SOPRA
 with spazio_algoritmo:
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
@@ -228,6 +213,6 @@ totale_ordine = quantita_ordine * prezzo_unitario
 _, col_btn, _ = st.columns([1, 1, 1])
 with col_btn:
     if st.button("APPROVA E TRASMETTI ORDINE"):
-        st.success(f"✅ Protocollo approvato. Ordine di **{quantita_ordine} scatole** di '{prodotto_scelto}' trasmesso ai sistemi HAVI.")
+        st.success(f"✅ Protocollo logistico approvato. Ordine di **{quantita_ordine} scatole** di '{prodotto_scelto}' trasmesso ai sistemi HAVI.")
         st.info(f"💶 Valore totale dell'ordine generato: **{totale_ordine:,.2f} €**")
         st.balloons()
