@@ -10,14 +10,13 @@ import os
 # =====================================================================
 st.set_page_config(page_title="HAVIConnect - Ordini", layout="wide", initial_sidebar_state="expanded")
 
-# Lettura sicura del file CSS esterno
 if os.path.exists("style.css"):
     with open("style.css") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 
 # =====================================================================
-# 2. SISTEMA DI AUTENTICAZIONE (SCHERMATA FEDELE ALL'IMMAGINE)
+# 2. SISTEMA DI AUTENTICAZIONE
 # =====================================================================
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
@@ -25,7 +24,6 @@ if 'autenticato' not in st.session_state:
 if not st.session_state['autenticato']:
     st.markdown("<br><br>", unsafe_allow_html=True)
     
-    # Il form di Streamlit funge da contenitore principale per l'effetto "Card"
     with st.form("login_form"):
         col_left, col_right = st.columns([1.2, 2])
         
@@ -37,8 +35,6 @@ if not st.session_state['autenticato']:
                         <span class="login-brand-text">HAVI & McD</span>
                     </div>
                     <div class="login-desc">Portale Ottimizzazione Scorte & Riordino Lotti</div>
-                    <div class="login-tag">Nodo Logistico Nord-Ovest</div>
-                    <div class="login-foot-left">Protocollo: TLS 1.3 • Stazione Certificata</div>
                 </div>
             """, unsafe_allow_html=True)
             
@@ -50,19 +46,10 @@ if not st.session_state['autenticato']:
                 </div>
             """, unsafe_allow_html=True)
             
-            # Input nativi Streamlit per agganciarsi al motore Python
             username = st.text_input("Codice Ristorante o ID Utente", value="IT-1048-MILANO-DUOMO")
             password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password")
             
-            # Bottone aggiornato come richiesto
             submitted = st.form_submit_button("Accedi allo store")
-            
-            st.markdown("""
-                <div class="login-right-footer">
-                    <span>Supporto Tecnico HAVI: Int. 4482</span>
-                    <span>v2.4 DSS Streamlit</span>
-                </div>
-            """, unsafe_allow_html=True)
             
         if submitted:
             if username == "IT-1048-MILANO-DUOMO" and password == "logistica":
@@ -71,7 +58,6 @@ if not st.session_state['autenticato']:
             else:
                 st.error("❌ Credenziali errate. Riprova. (Usa password: logistica)")
     
-    # Blocco vitale: ferma l'esecuzione di tutto il software se non si è loggati
     st.stop() 
 
 
@@ -118,7 +104,7 @@ st.markdown(f"### ⚙️ Parametri Operativi per: **{prodotto_scelto}**")
 
 
 # =====================================================================
-# 5. PARAMETRI OPERATIVI (Livello Servizio e Mantenimento)
+# 5. PARAMETRI OPERATIVI 
 # =====================================================================
 col_in1, col_in2 = st.columns(2)
 with col_in1:
@@ -160,7 +146,7 @@ z = z_scores[livello_servizio]
 
 
 # =====================================================================
-# 7. DATI DI CONSUMO (Utilizzando esplicitamente le classi esterne)
+# 7. DATI DI CONSUMO (Card Blu)
 # =====================================================================
 st.markdown("---")
 st.markdown("### 📊 Dati Storici di Consumo")
@@ -210,7 +196,7 @@ spazio_algoritmo = st.container()
 
 
 # =====================================================================
-# 10. PARAMETRI CONTRATTUALI (Fondo pagina)
+# 10. PARAMETRI CONTRATTUALI 
 # =====================================================================
 st.markdown("---")
 st.markdown("### 📄 Parametri Contrattuali")
