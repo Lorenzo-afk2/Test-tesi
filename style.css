@@ -70,6 +70,7 @@ h1, h2, h3 {
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
+/* Card KPI Grandi (Usate nella pagina Ordini) */
 .card-kpi { background-color: white !important; border-radius: 12px !important; padding: 25px !important; margin: 10px 0px !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.3s ease-in-out !important; }
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
@@ -78,6 +79,16 @@ h1, h2, h3 {
 .kpi-valore { color: #DA291C !important; font-size: 42px !important; font-weight: 900 !important; margin: 10px 0px !important; }
 .kpi-dettaglio { color: #2c3e50 !important; font-size: 13px !important; font-style: italic !important; }
 
+/* NUOVO: Card KPI Mini (Usate nella Home Page) */
+.card-kpi-mini { background-color: white !important; border-radius: 8px !important; padding: 12px 10px !important; margin: 5px 0px !important; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15) !important; border-top: 4px solid #DA291C !important; text-align: center !important; transition: all 0.2s ease-in-out !important; }
+.card-kpi-mini:hover { transform: translateY(-4px) !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; }
+.card-kpi-mini-yellow { border-top-color: #f2a900 !important; }
+.card-kpi-mini-green { border-top-color: #76c04f !important; }
+.card-kpi-mini .kpi-titolo { color: #7b8898 !important; font-size: 11px !important; font-weight: bold !important; text-transform: uppercase !important; }
+.card-kpi-mini .kpi-valore { color: #DA291C !important; font-size: 22px !important; font-weight: 900 !important; margin: 2px 0px !important; }
+.kpi-valore-green { color: #76c04f !important; }
+
+/* Card Blu per i Consumi */
 .metric-box { background-color: #003366 !important; border-radius: 10px !important; padding: 20px !important; text-align: center !important; border-bottom: 4px solid #ffc107 !important; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2) !important; }
 .metric-title { color: #ffffff !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
 .metric-value { color: #ffc107 !important; font-size: 38px !important; font-weight: 900 !important; margin: 5px 0px !important; }
@@ -94,36 +105,22 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #4285f4 !important; b
 /* =========================================
    5. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
    ========================================= */
+[data-testid="stSidebar"] h1 { font-size: 30px !important; font-weight: 900 !important; margin-bottom: 10px !important; }
+[data-testid="stSidebar"] .stRadio label p { font-size: 18px !important; font-weight: 600 !important; padding: 6px 0px; }
 
-/* Ingrandire il titolo "Menu Principale" */
-[data-testid="stSidebar"] h1 {
-    font-size: 30px !important;
-    font-weight: 900 !important;
-    margin-bottom: 10px !important;
-}
-
-/* Ingrandire le voci del menu di navigazione */
-[data-testid="stSidebar"] .stRadio label p {
-    font-size: 18px !important;
-    font-weight: 600 !important;
-    padding: 6px 0px;
-}
-
-/* Stile EVIDENTE e solido per il bottone di Log out */
+/* Tasto Log out Sidebar */
 [data-testid="stSidebar"] .stButton > button {
-    background-color: #1a2533 !important; /* Sfondo blu scuro aziendale */
-    color: #ffffff !important;            /* Testo bianco brillante */
-    border: 2px solid #DA291C !important; /* Bordo Rosso acceso McDonald's */
+    background-color: #1a2533 !important; 
+    color: #ffffff !important;            
+    border: 2px solid #DA291C !important; 
     border-radius: 8px !important;
     padding: 12px 15px !important;
-    font-size: 16px !important;           /* Testo ingrandito */
+    font-size: 16px !important;           
     font-weight: bold !important;
     width: 100% !important;
     transition: all 0.3s ease !important;
-    box-shadow: 0px 4px 6px rgba(0,0,0,0.1) !important; /* Leggera ombra di profondità */
+    box-shadow: 0px 4px 6px rgba(0,0,0,0.1) !important; 
 }
-
-/* Effetto Hover: Il bottone si riempie di rosso e si solleva */
 [data-testid="stSidebar"] .stButton > button:hover {
     background-color: #DA291C !important; 
     color: #ffffff !important;
