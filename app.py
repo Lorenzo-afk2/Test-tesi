@@ -44,14 +44,12 @@ if not st.session_state['autenticato']:
                 </div>
             """, unsafe_allow_html=True)
             
-            # Campi VUOTI di default per sicurezza
             username = st.text_input("Codice Ristorante o ID Utente", value="")
             password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password", value="")
             
             submitted = st.form_submit_button("Accedi allo store")
             
         if submitted:
-            # Check restrittivo: solo Sassari è ammesso
             if username == "IT-07100-SASSARI" and password == "RistoranteSS":
                 st.session_state['autenticato'] = True
                 st.rerun() 
@@ -65,7 +63,7 @@ if not st.session_state['autenticato']:
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
 catalogo_prodotti = {
-    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
+    "❄️️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
     "🥬 Fresco": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
     "📦 Secco": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
     "🧹 Operativo": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"]
@@ -121,33 +119,13 @@ if pagina_selezionata == "🏠 Home Page":
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown("""
-            <div class="card-kpi" style="padding: 15px !important; margin: 5px 0px !important;">
-                <div class="kpi-titolo">Stato Rifornimenti</div>
-                <div class="kpi-valore" style="color: #76c04f; font-size: 28px !important; margin: 0px !important;">REGOLARE</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="card-kpi-mini"><div class="kpi-titolo">Stato Rifornimenti</div><div class="kpi-valore kpi-valore-green">REGOLARE</div></div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown("""
-            <div class="card-kpi card-kpi-yellow" style="padding: 15px !important; margin: 5px 0px !important;">
-                <div class="kpi-titolo">Prossima Consegna</div>
-                <div class="kpi-valore" style="font-size: 28px !important; margin: 0px !important;">DOMANI</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="card-kpi-mini card-kpi-mini-yellow"><div class="kpi-titolo">Prossima Consegna</div><div class="kpi-valore">DOMANI</div></div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown("""
-            <div class="card-kpi card-kpi-green" style="padding: 15px !important; margin: 5px 0px !important;">
-                <div class="kpi-titolo">Allarmi Scorte</div>
-                <div class="kpi-valore" style="color: #76c04f; font-size: 28px !important; margin: 0px !important;">0</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="card-kpi-mini card-kpi-mini-green"><div class="kpi-titolo">Allarmi Scorte</div><div class="kpi-valore kpi-valore-green">0</div></div>""", unsafe_allow_html=True)
     with col4:
-        st.markdown("""
-            <div class="card-kpi" style="padding: 15px !important; margin: 5px 0px !important;">
-                <div class="kpi-titolo">Livello Servizio</div>
-                <div class="kpi-valore" style="font-size: 28px !important; margin: 0px !important;">98.5%</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="card-kpi-mini"><div class="kpi-titolo">Livello Servizio</div><div class="kpi-valore">98.5%</div></div>""", unsafe_allow_html=True)
 
 
 # =====================================================================
