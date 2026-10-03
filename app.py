@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import math
 import os
+import plotly.express as px
+from datetime import datetime
+import pytz
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
@@ -14,7 +17,7 @@ if os.path.exists("style.css"):
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # =====================================================================
-# 2. SISTEMA DI AUTENTICAZIONE
+# 2. SISTEMA DI AUTENTICAZIONE (Sicurezza Aggiornata)
 # =====================================================================
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
@@ -43,13 +46,15 @@ if not st.session_state['autenticato']:
                 </div>
             """, unsafe_allow_html=True)
             
-            username = st.text_input("Codice Ristorante o ID Utente", value="IT-1048-MILANO-DUOMO")
-            password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password")
+            # Campi VUOTI di default per sicurezza
+            username = st.text_input("Codice Ristorante o ID Utente", value="")
+            password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password", value="")
             
             submitted = st.form_submit_button("Accedi allo store")
             
         if submitted:
-            if username == "IT-1048-MILANO-DUOMO" and password == "logistica":
+            # Check restrittivo: solo Sassari è ammesso
+            if username == "IT-07100-SASSARI" and password == "RistoranteSS":
                 st.session_state['autenticato'] = True
                 st.rerun() 
             else:
@@ -109,19 +114,47 @@ if st.sidebar.button("🚪 Log out"):
 # 5. ROUTING: PAGINA HOME
 # =====================================================================
 if pagina_selezionata == "🏠 Home Page":
-    st.title("Dashboard Direzionale | HAVIConnect")
-    st.markdown("Benvenuto nel sistema di gestione logistica. Seleziona un modulo dal menu laterale per iniziare.")
+    st.title("Dashboard Direzionale | IT-07100-SASSARI")
+    
+    # Sottotitolo con data e ora in tempo reale (Fuso orario italiano)
+    tz = pytz.timezone('Europe/Rome')
+    data_ora_attuale = datetime.now(tz).strftime('%d/%m/%Y, %H:%M')
+    
+    st.markdown("#### Benvenuto nel sistema di gestione logistica.")
+    st.markdown(f"*(Dati aggiornati al: {data_ora_attuale})*")
     
     st.markdown("---")
     st.subheader("Stato Operativo Ristorante")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown("""<div class="card-kpi"><div class="kpi-titolo">Stato Rifornimenti</div><div class="kpi-valore" style="color: #76c04f;">REGOLARE</div></div>""", unsafe_allow_html=True)
+        st.markdown("""
+            <div class="card-kpi" style="padding: 15px !important; margin: 5px 0px !important;">
+                <div class="kpi-titolo">Stato Rifornimenti</div>
+                <div class="kpi-valore" style="color: #76c04f; font-size: 28px !important; margin: 0px !important;">REGOLARE</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col2:
-        st.markdown("""<div class="card-kpi"><div class="kpi-titolo">Prossima Consegna</div><div class="kpi-valore">DOMANI</div></div>""", unsafe_allow_html=True)
+        st.markdown("""
+            <div class="card-kpi card-kpi-yellow" style="padding: 15px !important; margin: 5px 0px !important;">
+                <div class="kpi-titolo">Prossima Consegna</div>
+                <div class="kpi-valore" style="font-size: 28px !important; margin: 0px !important;">DOMANI</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col3:
-        st.markdown("""<div class="card-kpi"><div class="kpi-titolo">Allarmi Scorte</div><div class="kpi-valore" style="color: #76c04f;">0</div></div>""", unsafe_allow_html=True)
+        st.markdown("""
+            <div class="card-kpi card-kpi-green" style="padding: 15px !important; margin: 5px 0px !important;">
+                <div class="kpi-titolo">Allarmi Scorte</div>
+                <div class="kpi-valore" style="color: #76c04f; font-size: 28px !important; margin: 0px !important;">0</div>
+            </div>
+        """, unsafe_allow_html=True)
+    with col4:
+        st.markdown("""
+            <div class="card-kpi" style="padding: 15px !important; margin: 5px 0px !important;">
+                <div class="kpi-titolo">Livello Servizio</div>
+                <div class="kpi-valore" style="font-size: 28px !important; margin: 0px !important;">98.5%</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 
 # =====================================================================
