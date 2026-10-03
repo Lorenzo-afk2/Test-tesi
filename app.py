@@ -2,18 +2,16 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import math
-import plotly.express as px
 import os
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
 # =====================================================================
-st.set_page_config(page_title="HAVIConnect - Ordini", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="HAVIConnect - Store", layout="wide", initial_sidebar_state="expanded")
 
 if os.path.exists("style.css"):
     with open("style.css") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
 
 # =====================================================================
 # 2. SISTEMA DI AUTENTICAZIONE
@@ -45,13 +43,13 @@ if not st.session_state['autenticato']:
                 </div>
             """, unsafe_allow_html=True)
             
-            username = st.text_input("Codice Ristorante o ID Utente")
+            username = st.text_input("Codice Ristorante o ID Utente", value="IT-1048-MILANO-DUOMO")
             password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password")
             
             submitted = st.form_submit_button("Accedi allo store")
             
         if submitted:
-            if username == "IT-07100-SASSARI" and password == "RistoranteSS":
+            if username == "IT-1048-MILANO-DUOMO" and password == "logistica":
                 st.session_state['autenticato'] = True
                 st.rerun() 
             else:
@@ -61,7 +59,7 @@ if not st.session_state['autenticato']:
 
 
 # =====================================================================
-# 3. CATALOGO PRODOTTI E LISTINO PREZZI
+# 3. DATI IN MEMORIA (Sempre disponibili in tutte le pagine)
 # =====================================================================
 catalogo_prodotti = {
     "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
@@ -77,180 +75,177 @@ prezzi_prodotti = {
     "Guanti in Nitrile (Box)": 8.50, "Sgrassatore Superfici (Taniche)": 14.00, "Rotoli Asciugatutto": 19.00
 }
 
-
-# =====================================================================
-# 4. INTERFACCIA: SELEZIONE E QUANTITA'
-# =====================================================================
-st.title("HAVIConnect | Compilazione Ordine")
-st.markdown("Seleziona il prodotto e compila la distinta base dell'ordine.")
-
-col_rep, col_prod = st.columns(2)
-with col_rep:
-    reparto_scelto = st.selectbox("1. Seleziona il Reparto", list(catalogo_prodotti.keys()))
-with col_prod:
-    prodotto_scelto = st.selectbox("2. Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
-
-prezzo_base = prezzi_prodotti[prodotto_scelto]
-
-col_prz, col_qta = st.columns(2)
-with col_prz:
-    prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0)
-with col_qta:
-    quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
-
-st.markdown("---")
-st.markdown(f"### ⚙️ Parametri Operativi per: **{prodotto_scelto}**")
-
-
-# =====================================================================
-# 5. PARAMETRI OPERATIVI 
-# =====================================================================
-col_in1, col_in2 = st.columns(2)
-with col_in1:
-    livello_servizio = st.selectbox("Livello di Servizio (%)", [90, 95, 99], index=1)
-with col_in2:
-    costo_mantenimento_default = round(prezzo_base * 0.15, 2)
-    costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
-
-
-# =====================================================================
-# 6. GENERAZIONE DATABASE E CALCOLI STATISTICI
-# =====================================================================
 @st.cache_data 
 def genera_database_simulato(nome_prodotto):
     date_storiche = pd.date_range(start="2021-01-01", end="2023-12-31", freq="D")
     np.random.seed(len(nome_prodotto) * 42) 
-    
     vendite = np.random.normal(loc=200, scale=30, size=len(date_storiche))
     df = pd.DataFrame({'Data': date_storiche, 'Domanda_Scatole': vendite})
-    
     df['Giorno_Num'] = df['Data'].dt.dayofweek 
     df.loc[df['Giorno_Num'] >= 5, 'Domanda_Scatole'] *= 1.40 
     df['Domanda_Scatole'] = np.maximum(df['Domanda_Scatole'].round(), 0).astype(int)
-    
-    mappa_giorni = {0: 'Lunedì', 1: 'Martedì', 2: 'Mercoledì', 3: 'Giovedì', 4: 'Venerdì', 5: 'Sabato', 6: 'Domenica'}
-    df['Giorno Settimana'] = df['Giorno_Num'].map(mappa_giorni)
-    df['Data Formattata'] = df['Data'].dt.strftime('%d-%m-%Y')
-    
     return df
 
-df_storico = genera_database_simulato(prodotto_scelto)
-
-d_media = df_storico['Domanda_Scatole'].mean()
-sigma = df_storico['Domanda_Scatole'].std()
-D_annua = d_media * 365
-
-z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
-z = z_scores[livello_servizio]
-
 
 # =====================================================================
-# 7. DATI DI CONSUMO 
-# =====================================================================
-st.markdown("---")
-st.markdown("### 📊 Dati Storici di Consumo")
-
-col_dem1, col_dem2 = st.columns(2)
-with col_dem1:
-    st.markdown(f"""
-        <div class="metric-box">
-            <div class="metric-title">Domanda Media Giornaliera (d)</div>
-            <div class="metric-value">{int(d_media)}</div>
-            <div class="metric-subtitle">Scatole al giorno</div>
-        </div>
-    """, unsafe_allow_html=True)
-with col_dem2:
-    st.markdown(f"""
-        <div class="metric-box">
-            <div class="metric-title">Domanda Annua Stimata (D)</div>
-            <div class="metric-value">{int(D_annua):,}</div>
-            <div class="metric-subtitle">Scatole totali previste</div>
-        </div>
-    """.replace(',', '.'), unsafe_allow_html=True) 
-
-
-# =====================================================================
-# 8. SIDEBAR 
+# 4. SIDEBAR - MENU DI NAVIGAZIONE
 # =====================================================================
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/McDonald%27s_Golden_Arches.svg/120px-McDonald%27s_Golden_Arches.svg.png", width=60)
-st.sidebar.title("Dati di Supporto")
-tab_grafico, tab_database = st.sidebar.tabs(["📈 Trend", "📝 Database"])
+st.sidebar.title("Menu Principale")
 
-with tab_grafico:
-    fig = px.line(df_storico.tail(30), x='Data', y='Domanda_Scatole', markers=True, color_discrete_sequence=['#DA291C'], line_shape='spline')
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='white', margin=dict(l=0, r=0, t=10, b=0), xaxis_title=None, yaxis_title=None)
-    fig.add_hline(y=float(d_media), line_dash="dash", line_color="#76c04f", annotation_text="Media")
-    st.plotly_chart(fig, use_container_width=True)
+# Il selettore di pagine (La Home è la prima della lista, quindi si aprirà di default)
+pagina_selezionata = st.sidebar.radio(
+    "",
+    ["🏠 Home Page", "📦 Compilazione Ordine", "📋 Inventario", "📄 File Consumazioni"]
+)
 
-with tab_database:
-    st.dataframe(df_storico[['Data Formattata', 'Giorno Settimana', 'Domanda_Scatole']].head(15), hide_index=True, use_container_width=True)
+st.sidebar.markdown("---")
 
-
-# =====================================================================
-# 9. INTESTAZIONE SUGGERIMENTI E CREAZIONE CONTENITORE VUOTO
-# =====================================================================
-st.markdown("---")
-st.subheader("📦 Suggerimenti dell'Algoritmo (Modello EOQ)")
-spazio_algoritmo = st.container() 
+# Tasto di Logout in fondo alla sidebar
+if st.sidebar.button("🚪 Logout"):
+    st.session_state['autenticato'] = False
+    st.rerun()
 
 
 # =====================================================================
-# 10. PARAMETRI CONTRATTUALI 
+# 5. ROUTING: PAGINA HOME
 # =====================================================================
-st.markdown("---")
-st.markdown("### 📄 Parametri Contrattuali")
-col_c1, col_c2 = st.columns(2)
-with col_c1:
-    lead_time = st.number_input("Lead Time di Consegna (Giorni) [L]", value=3, step=1)
-with col_c2:
-    costo_ordine = st.number_input("Costo Fisso di Consegna/Ordine (€) [Co]", value=50.0, step=5.0)
+if pagina_selezionata == "🏠 Home Page":
+    st.title("Dashboard Direzionale | HAVIConnect")
+    st.markdown("Benvenuto nel sistema di gestione logistica. Seleziona un modulo dal menu laterale per iniziare.")
+    
+    st.markdown("---")
+    st.subheader("Stato Operativo Ristorante")
+    
+    # 3 Card fittizie per rendere la Home Page professionale
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("""<div class="card-kpi"><div class="kpi-titolo">Stato Rifornimenti</div><div class="kpi-valore" style="color: #76c04f;">REGOLARE</div></div>""", unsafe_allow_html=True)
+    with col2:
+        st.markdown("""<div class="card-kpi"><div class="kpi-titolo">Prossima Consegna</div><div class="kpi-valore">DOMANI</div></div>""", unsafe_allow_html=True)
+    with col3:
+        st.markdown("""<div class="card-kpi"><div class="kpi-titolo">Allarmi Scorte</div><div class="kpi-valore" style="color: #76c04f;">0</div></div>""", unsafe_allow_html=True)
 
 
 # =====================================================================
-# 11. MATEMATICA E INIEZIONE NEL CONTENITORE IN ALTO
+# 6. ROUTING: COMPILAZIONE ORDINE (Il vecchio codice)
 # =====================================================================
-eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
-scorta_sicurezza = z * sigma * math.sqrt(lead_time)
-rop = (d_media * lead_time) + scorta_sicurezza
+elif pagina_selezionata == "📦 Compilazione Ordine":
+    st.title("Compilazione Ordine")
+    st.markdown("Seleziona il prodotto e compila la distinta base dell'ordine.")
 
-with spazio_algoritmo:
-    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
-    with col_kpi1:
+    col_rep, col_prod = st.columns(2)
+    with col_rep:
+        reparto_scelto = st.selectbox("1. Seleziona il Reparto", list(catalogo_prodotti.keys()))
+    with col_prod:
+        prodotto_scelto = st.selectbox("2. Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
+
+    prezzo_base = prezzi_prodotti[prodotto_scelto]
+
+    col_prz, col_qta = st.columns(2)
+    with col_prz:
+        prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0)
+    with col_qta:
+        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
+
+    st.markdown("---")
+    st.markdown(f"### ⚙️ Parametri Operativi per: **{prodotto_scelto}**")
+
+    col_in1, col_in2 = st.columns(2)
+    with col_in1:
+        livello_servizio = st.selectbox("Livello di Servizio (%)", [90, 95, 99], index=1)
+    with col_in2:
+        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
+        costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
+
+    df_storico = genera_database_simulato(prodotto_scelto)
+    d_media = df_storico['Domanda_Scatole'].mean()
+    sigma = df_storico['Domanda_Scatole'].std()
+    D_annua = d_media * 365
+    z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
+    z = z_scores[livello_servizio]
+
+    st.markdown("---")
+    st.markdown("### 📊 Dati Storici di Consumo")
+
+    col_dem1, col_dem2 = st.columns(2)
+    with col_dem1:
         st.markdown(f"""
-            <div class="card-kpi">
-                <div class="kpi-titolo">Quantità Ottimale (EOQ)</div>
-                <div class="kpi-valore">{int(eoq)}</div>
-                <div class="kpi-dettaglio">Scatole per minimizzare i costi</div>
+            <div class="metric-box">
+                <div class="metric-title">Domanda Media Giornaliera (d)</div>
+                <div class="metric-value">{int(d_media)}</div>
+                <div class="metric-subtitle">Scatole al giorno</div>
             </div>
         """, unsafe_allow_html=True)
-    with col_kpi2:
+    with col_dem2:
         st.markdown(f"""
-            <div class="card-kpi card-kpi-yellow">
-                <div class="kpi-titolo">Soglia di Riordino (ROP)</div>
-                <div class="kpi-valore">{int(rop)}</div>
-                <div class="kpi-dettaglio">Ordinare a questa giacenza</div>
+            <div class="metric-box">
+                <div class="metric-title">Domanda Annua Stimata (D)</div>
+                <div class="metric-value">{int(D_annua):,}</div>
+                <div class="metric-subtitle">Scatole totali previste</div>
             </div>
-        """, unsafe_allow_html=True)
-    with col_kpi3:
-        st.markdown(f"""
-            <div class="card-kpi card-kpi-green">
-                <div class="kpi-titolo">Scorta di Sicurezza (S)</div>
-                <div class="kpi-valore">{int(scorta_sicurezza)}</div>
-                <div class="kpi-dettaglio">Copertura imprevisti</div>
-            </div>
-        """, unsafe_allow_html=True)
+        """.replace(',', '.'), unsafe_allow_html=True) 
+
+    st.markdown("---")
+    st.subheader("📦 Suggerimenti dell'Algoritmo (Modello EOQ)")
+    spazio_algoritmo = st.container() 
+
+    st.markdown("---")
+    st.markdown("### 📄 Parametri Contrattuali")
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        lead_time = st.number_input("Lead Time di Consegna (Giorni) [L]", value=3, step=1)
+    with col_c2:
+        costo_ordine = st.number_input("Costo Fisso di Consegna/Ordine (€) [Co]", value=50.0, step=5.0)
+
+    eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
+    scorta_sicurezza = z * sigma * math.sqrt(lead_time)
+    rop = (d_media * lead_time) + scorta_sicurezza
+
+    with spazio_algoritmo:
+        col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
+        with col_kpi1:
+            st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Quantità Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole per minimizzare i costi</div></div>""", unsafe_allow_html=True)
+        with col_kpi2:
+            st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Soglia di Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Ordinare a questa giacenza</div></div>""", unsafe_allow_html=True)
+        with col_kpi3:
+            st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta di Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura imprevisti</div></div>""", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    totale_ordine = quantita_ordine * prezzo_unitario
+    _, col_btn, _ = st.columns([1, 1, 1])
+    with col_btn:
+        if st.button("APPROVA E TRASMETTI ORDINE"):
+            st.success(f"✅ Protocollo logistico approvato. Ordine di **{quantita_ordine} scatole** di '{prodotto_scelto}' trasmesso ai sistemi HAVI.")
+            st.info(f"💶 Valore totale dell'ordine generato: **{totale_ordine:,.2f} €**")
+            st.balloons()
 
 
 # =====================================================================
-# 12. TOTALE E TRASMISSIONE ORDINE
+# 7. ROUTING: INVENTARIO (Pagina Segnaposto)
 # =====================================================================
-st.markdown("<br>", unsafe_allow_html=True)
+elif pagina_selezionata == "📋 Inventario":
+    st.title("📋 Inventario di Magazzino")
+    st.markdown("Visualizzazione giacenze attuali in tempo reale.")
+    
+    # Tabella visiva segnaposto
+    df_inventario = pd.DataFrame({
+        "Reparto": ["Congelato", "Congelato", "Fresco", "Secco", "Operativo"],
+        "Prodotto": ["Hamburger di Manzo 4:1", "Patatine Fritte", "Pomodori a Fette", "Panini Regular", "Guanti Nitrile"],
+        "Giacenza (Scatole)": [45, 12, 5, 80, 2],
+        "Stato": ["🟢 Regolare", "🟡 Attenzione", "🔴 Critico", "🟢 Regolare", "🔴 Critico"]
+    })
+    st.dataframe(df_inventario, use_container_width=True, hide_index=True)
 
-totale_ordine = quantita_ordine * prezzo_unitario
 
-_, col_btn, _ = st.columns([1, 1, 1])
-with col_btn:
-    if st.button("APPROVA E TRASMETTI ORDINE"):
-        st.success(f"✅ Protocollo logistico approvato. Ordine di **{quantita_ordine} scatole** di '{prodotto_scelto}' trasmesso ai sistemi HAVI.")
-        st.info(f"💶 Valore totale dell'ordine generato: **{totale_ordine:,.2f} €**")
-        st.balloons()
+# =====================================================================
+# 8. ROUTING: FILE CONSUMAZIONI (Pagina Segnaposto)
+# =====================================================================
+elif pagina_selezionata == "📄 File Consumazioni":
+    st.title("📄 File Consumazioni")
+    st.markdown("Carica il file esportato dalle casse (formato CSV o Excel) per aggiornare il database storico.")
+    
+    # Componente grafico per il caricamento file
+    file_caricato = st.file_uploader("Trascina qui il file", type=['csv', 'xlsx'])
+    if file_caricato:
+        st.success("✅ File caricato ed elaborato con successo. I dati sono stati aggiornati.")
