@@ -15,10 +15,14 @@ if os.path.exists("style.css"):
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # =====================================================================
-# 2. SISTEMA DI AUTENTICAZIONE (Sicurezza Aggiornata)
+# 2. SISTEMA DI AUTENTICAZIONE E MEMORIA (Carrello)
 # =====================================================================
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
+
+# Creiamo il carrello vuoto nella memoria della sessione
+if 'carrello' not in st.session_state:
+    st.session_state['carrello'] = []
 
 if not st.session_state['autenticato']:
     st.markdown("<br><br>", unsafe_allow_html=True)
@@ -129,12 +133,13 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE
+# 6. ROUTING: COMPILAZIONE ORDINE E CARRELLO
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
-    st.markdown("Seleziona il prodotto e compila la distinta base dell'ordine.")
+    st.markdown("Seleziona il prodotto, analizza i parametri e aggiungilo alla distinta d'ordine.")
 
+    # --- FASE 1: SCELTA PRODOTTO ---
     col_rep, col_prod = st.columns(2)
     with col_rep:
         reparto_scelto = st.selectbox("1. Seleziona il Reparto", list(catalogo_prodotti.keys()))
@@ -150,6 +155,8 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
 
     st.markdown("---")
+    
+    # --- FASE 2: ANALISI LOGISTICA ---
     st.markdown(f"### ⚙️ Parametri Operativi per: **{prodotto_scelto}**")
 
     col_in1, col_in2 = st.columns(2)
@@ -171,21 +178,9 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     col_dem1, col_dem2 = st.columns(2)
     with col_dem1:
-        st.markdown(f"""
-            <div class="metric-box">
-                <div class="metric-title">Domanda Media Giornaliera (d)</div>
-                <div class="metric-value">{int(d_media)}</div>
-                <div class="metric-subtitle">Scatole al giorno</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Media Giornaliera (d)</div><div class="metric-value">{int(d_media)}</div><div class="metric-subtitle">Scatole al giorno</div></div>""", unsafe_allow_html=True)
     with col_dem2:
-        st.markdown(f"""
-            <div class="metric-box">
-                <div class="metric-title">Domanda Annua Stimata (D)</div>
-                <div class="metric-value">{int(D_annua):,}</div>
-                <div class="metric-subtitle">Scatole totali previste</div>
-            </div>
-        """.replace(',', '.'), unsafe_allow_html=True) 
+        st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Annua Stimata (D)</div><div class="metric-value">{int(D_annua):,}</div><div class="metric-subtitle">Scatole totali previste</div></div>""".replace(',', '.'), unsafe_allow_html=True) 
 
     st.markdown("---")
     st.subheader("📦 Suggerimenti dell'Algoritmo (Modello EOQ)")
@@ -194,26 +189,14 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     st.markdown("---")
     st.markdown("### 📄 Parametri Contrattuali (Bloccati da Corporate)")
     
-    # Variabili fisse nel motore Python (non più modificabili)
     lead_time = 3
     costo_ordine = 50.0
 
-    # Interfaccia di sola lettura con le nuove Card CSS grigie
     col_c1, col_c2 = st.columns(2)
     with col_c1:
-        st.markdown(f"""
-            <div class="contract-box">
-                <div class="contract-title">Lead Time di Consegna [L]</div>
-                <div class="contract-value">🔒 {lead_time} Giorni</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Consegna [L]</div><div class="contract-value">🔒 {lead_time} Giorni</div></div>""", unsafe_allow_html=True)
     with col_c2:
-        st.markdown(f"""
-            <div class="contract-box">
-                <div class="contract-title">Costo Fisso di Consegna/Ordine [Co]</div>
-                <div class="contract-value">🔒 {costo_ordine} €</div>
-            </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Fisso di Consegna/Ordine [Co]</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
 
     eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
     scorta_sicurezza = z * sigma * math.sqrt(lead_time)
@@ -229,22 +212,70 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta di Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura imprevisti</div></div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    totale_ordine = quantita_ordine * prezzo_unitario
-    _, col_btn, _ = st.columns([1, 1, 1])
-    with col_btn:
-        if st.button("APPROVA E TRASMETTI ORDINE"):
-            st.success(f"✅ Protocollo logistico approvato. Ordine di **{quantita_ordine} scatole** di '{prodotto_scelto}' trasmesso ai sistemi HAVI.")
-            st.info(f"💶 Valore totale dell'ordine generato: **{totale_ordine:,.2f} €**")
-            st.balloons()
+    
+    # --- FASE 3: AGGIUNTA AL CARRELLO ---
+    _, col_btn_add, _ = st.columns([1, 2, 1])
+    with col_btn_add:
+        if st.button("➕ AGGIUNGI ALL'ORDINE"):
+            # Salva i dati del prodotto scelto nella memoria della sessione
+            st.session_state['carrello'].append({
+                "Reparto": reparto_scelto,
+                "Prodotto": prodotto_scelto,
+                "Quantità": quantita_ordine,
+                "Prezzo Unit.": f"{prezzo_unitario:.2f} €",
+                "Totale": quantita_ordine * prezzo_unitario
+            })
+            st.success(f"✅ {quantita_ordine} scatole di '{prodotto_scelto}' aggiunte alla distinta.")
+
+
+    # --- FASE 4: RIEPILOGO E TRASMISSIONE ---
+    st.markdown("---")
+    st.markdown("## 🛒 Riepilogo Ordine in Corso")
+
+    if len(st.session_state['carrello']) > 0:
+        # Crea la tabella visiva partendo dalla memoria
+        df_carrello = pd.DataFrame(st.session_state['carrello'])
+        
+        # Mostra la tabella formattata
+        st.dataframe(df_carrello.drop(columns=['Totale']), use_container_width=True, hide_index=True)
+        
+        # Calcola la somma matematica totale
+        totale_complessivo = df_carrello['Totale'].sum()
+        
+        # Stampa il box del totale con la nuova classe CSS
+        st.markdown(f"""
+            <div class="cart-total-box">
+                <div class="cart-total-label">Totale Provvisorio Ordine:</div>
+                <div class="cart-total-value">{totale_complessivo:,.2f} €</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Bottoni finali: Trasmetti o Svuota
+        col_btn_clear, col_btn_submit = st.columns([1, 2])
+        
+        with col_btn_clear:
+            if st.button("🗑️️ SVUOTA DISTINTA"):
+                st.session_state['carrello'] = []
+                st.rerun() # Ricarica per azzerare la vista
+                
+        with col_btn_submit:
+            if st.button("🚀 TRASMETTI ORDINE AD HAVI"):
+                st.success("✅ Ordine trasmesso con successo ai sistemi centrali HAVI! Riceverai una notifica di conferma a breve.")
+                st.balloons()
+                st.session_state['carrello'] = [] # Svuota il carrello dopo l'invio
+                
+    else:
+        st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto e clicca su 'Aggiungi all'ordine'.")
 
 
 # =====================================================================
-# 7. ROUTING: INVENTARIO (Pagina Segnaposto)
+# 7. ROUTING: INVENTARIO E FILE CONSUMAZIONI
 # =====================================================================
 elif pagina_selezionata == "📋 Inventario":
     st.title("📋 Inventario di Magazzino")
     st.markdown("Visualizzazione giacenze attuali in tempo reale.")
-    
     df_inventario = pd.DataFrame({
         "Reparto": ["Congelato", "Congelato", "Fresco", "Secco", "Operativo"],
         "Prodotto": ["Hamburger di Manzo 4:1", "Patatine Fritte", "Pomodori a Fette", "Panini Regular", "Guanti Nitrile"],
@@ -253,14 +284,9 @@ elif pagina_selezionata == "📋 Inventario":
     })
     st.dataframe(df_inventario, use_container_width=True, hide_index=True)
 
-
-# =====================================================================
-# 8. ROUTING: FILE CONSUMAZIONI (Pagina Segnaposto)
-# =====================================================================
 elif pagina_selezionata == "📄 File Consumazioni":
     st.title("📄 File Consumazioni")
     st.markdown("Carica il file esportato dalle casse (formato CSV o Excel) per aggiornare il database storico.")
-    
     file_caricato = st.file_uploader("Trascina qui il file", type=['csv', 'xlsx'])
     if file_caricato:
         st.success("✅ File caricato ed elaborato con successo. I dati sono stati aggiornati.")
