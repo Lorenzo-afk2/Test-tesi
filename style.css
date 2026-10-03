@@ -2,10 +2,13 @@
    HAVIConnect - Design System Enterprise 
    ========================================= */
 
-/* 1. PULIZIA GENERALE STREAMLIT */
+/* 1. PULIZIA GENERALE E FIX SIDEBAR */
 #MainMenu {visibility: hidden !important; display: none !important;}
-header {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
+/* Rendiamo l'header invisibile per lo sfondo ma lasciamo attivo il bottone della sidebar */
+[data-testid="stHeader"] { background-color: transparent !important; }
+/* Nascondiamo il bottone cloud di Streamlit se dovesse apparire */
+.stDeployButton { visibility: hidden !important; display: none !important; }
 
 /* 2. SFONDO GLOBALE APP */
 .stApp {
