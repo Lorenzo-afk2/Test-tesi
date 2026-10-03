@@ -90,6 +90,14 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #4285f4 !important; b
 /* =========================================
    5. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
    ========================================= */
+
+/* Ingrandire il titolo "Menu Principale" */
+[data-testid="stSidebar"] h1 {
+    font-size: 30px !important;
+    font-weight: 900 !important;
+    margin-bottom: 10px !important;
+}
+
 /* Ingrandire le voci del menu di navigazione */
 [data-testid="stSidebar"] .stRadio label p {
     font-size: 18px !important;
@@ -97,21 +105,25 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #4285f4 !important; b
     padding: 6px 0px;
 }
 
-/* Stile elegante per il bottone di Logout nella sidebar (sovrascrive il verde globale) */
+/* Stile EVIDENTE e solido per il bottone di Log out */
 [data-testid="stSidebar"] .stButton > button {
-    background-color: transparent !important;
-    color: #a0aec0 !important;
-    border: 1px solid #4a5568 !important;
+    background-color: #1a2533 !important; /* Sfondo blu scuro aziendale */
+    color: #ffffff !important;            /* Testo bianco brillante */
+    border: 2px solid #DA291C !important; /* Bordo Rosso acceso McDonald's */
     border-radius: 8px !important;
-    padding: 10px 15px !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
+    padding: 12px 15px !important;
+    font-size: 16px !important;           /* Testo ingrandito */
+    font-weight: bold !important;
     width: 100% !important;
     transition: all 0.3s ease !important;
+    box-shadow: 0px 4px 6px rgba(0,0,0,0.1) !important; /* Leggera ombra di profondità */
 }
+
+/* Effetto Hover: Il bottone si riempie di rosso e si solleva */
 [data-testid="stSidebar"] .stButton > button:hover {
-    background-color: #2d3748 !important;
+    background-color: #DA291C !important; 
     color: #ffffff !important;
-    border-color: #718096 !important;
-    transform: none !important; /* Rimuove l'ingrandimento del bottone verde */
+    border-color: #DA291C !important;
+    transform: translateY(-2px) !important; 
+    box-shadow: 0px 6px 12px rgba(218, 41, 28, 0.3) !important;
 }
