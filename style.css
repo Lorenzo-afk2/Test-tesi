@@ -64,7 +64,6 @@ h1, h2, h3 {
     background-color: #b02015 !important; color: #ffffff !important; border: 1px solid #b02015 !important; opacity: 1 !important;
 }
 
-
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
@@ -73,7 +72,7 @@ h1, h2, h3 {
 .card-kpi { 
     background-color: white !important; 
     border-radius: 12px !important; 
-    padding: 20px 15px !important; /* Rimpicciolito (era 25px) per allinearsi alle card blu */
+    padding: 20px 15px !important; 
     margin: 10px 0px !important; 
     box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; 
     border-top: 5px solid #DA291C !important; 
@@ -83,23 +82,22 @@ h1, h2, h3 {
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
 .card-kpi-green { border-top-color: #76c04f !important; }
-
 .kpi-titolo { color: #7b8898 !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; }
-.kpi-valore { color: #DA291C !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } /* Rimpicciolito (era 42px) */
+.kpi-valore { color: #DA291C !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } 
 .kpi-dettaglio { color: #2c3e50 !important; font-size: 12px !important; font-style: italic !important; }
 
 /* --- BLOCCO 2: DATI STORICI CONSUMO (Card Blu) --- */
 .metric-box { 
     background-color: #003366 !important; 
-    border-radius: 12px !important; /* Allineato alle card bianche */
-    padding: 20px 15px !important;  /* Allineato alle card bianche */
-    margin: 10px 0px !important;    /* Allineato alle card bianche */
+    border-radius: 12px !important; 
+    padding: 20px 15px !important;  
+    margin: 10px 0px !important;    
     text-align: center !important; 
     border-bottom: 4px solid #ffc107 !important; 
     box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; 
 }
 .metric-title { color: #ffffff !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
-.metric-value { color: #ffc107 !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } /* Allineato a kpi-valore */
+.metric-value { color: #ffc107 !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } 
 .metric-subtitle { color: white !important; font-size: 12px !important; font-style: italic !important; }
 
 /* --- BLOCCO 3: HOME PAGE (Card Medie) --- */
@@ -111,37 +109,44 @@ h1, h2, h3 {
 .card-kpi-mini .kpi-valore { color: #DA291C !important; font-size: 30px !important; font-weight: 900 !important; margin: 8px 0px !important; }
 .kpi-valore-green { color: #76c04f !important; }
 
+/* --- BLOCCO 4: PARAMETRI CONTRATTUALI (Sola Lettura) --- */
+.contract-box {
+    background-color: #e2e8f0 !important; /* Grigio istituzionale chiaro */
+    border-radius: 8px !important;
+    padding: 15px !important;
+    border-left: 5px solid #7b8898 !important; /* Banda grigio scuro */
+    color: #1a2533 !important;
+    margin: 5px 0px !important;
+    box-shadow: inset 0px 0px 5px rgba(0,0,0,0.05) !important;
+}
+.contract-title {
+    font-size: 13px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    color: #4a5568 !important;
+    margin-bottom: 5px !important;
+}
+.contract-value {
+    font-size: 22px !important;
+    font-weight: 900 !important;
+    color: #1a2533 !important;
+}
+
 /* --- INPUT E BOTTONI APP PRINCIPALE --- */
 div[data-baseweb="input"] { background-color: white !important; border-radius: 8px !important; border: 1px solid #cccccc !important; transition: 0.2s; }
 div[data-baseweb="input"]:focus-within { border: 2px solid #4285f4 !important; box-shadow: 0 0 10px rgba(66, 133, 244, 0.3) !important; }
-
 .stButton > button { background-color: #76c04f !important; color: white !important; border-radius: 30px !important; padding: 12px 30px !important; font-weight: bold !important; font-size: 16px !important; width: 100% !important; transition: all 0.3s !important; border: none !important; }
 .stButton > button:hover { background-color: #5da03b !important; transform: scale(1.03) !important; color: white !important; }
 .stButton > button:active { transform: scale(0.97) !important; }
-
 
 /* =========================================
    5. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
    ========================================= */
 [data-testid="stSidebar"] h1 { font-size: 30px !important; font-weight: 900 !important; margin-bottom: 10px !important; }
 [data-testid="stSidebar"] .stRadio label p { font-size: 18px !important; font-weight: 600 !important; padding: 6px 0px; }
-
 [data-testid="stSidebar"] .stButton > button {
-    background-color: #1a2533 !important; 
-    color: #ffffff !important;            
-    border: 2px solid #DA291C !important; 
-    border-radius: 8px !important;
-    padding: 12px 15px !important;
-    font-size: 16px !important;           
-    font-weight: bold !important;
-    width: 100% !important;
-    transition: all 0.3s ease !important;
-    box-shadow: 0px 4px 6px rgba(0,0,0,0.1) !important; 
+    background-color: #1a2533 !important; color: #ffffff !important; border: 2px solid #DA291C !important; border-radius: 8px !important; padding: 12px 15px !important; font-size: 16px !important; font-weight: bold !important; width: 100% !important; transition: all 0.3s ease !important; box-shadow: 0px 4px 6px rgba(0,0,0,0.1) !important; 
 }
 [data-testid="stSidebar"] .stButton > button:hover {
-    background-color: #DA291C !important; 
-    color: #ffffff !important;
-    border-color: #DA291C !important;
-    transform: translateY(-2px) !important; 
-    box-shadow: 0px 6px 12px rgba(218, 41, 28, 0.3) !important;
+    background-color: #DA291C !important; color: #ffffff !important; border-color: #DA291C !important; transform: translateY(-2px) !important; box-shadow: 0px 6px 12px rgba(218, 41, 28, 0.3) !important;
 }
