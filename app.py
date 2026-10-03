@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import math
 import os
-import plotly.express as px
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
@@ -73,7 +72,7 @@ if not st.session_state['autenticato']:
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
 catalogo_prodotti = {
-    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
+    "❄️️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
     "🥬 Fresco": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
     "📦 Secco": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
     "🧹 Operativo": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"]
@@ -143,7 +142,7 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
-    st.markdown("Seleziona il prodotto e i relativi parametri, poi aggiungilo alla distinta d'ordine.")
+    st.markdown("Seleziona il prodotto e la quantità da ordinare.")
 
     # --- 1. PRIMA RIGA: REPARTO E PRODOTTO ---
     col_rep, col_prod = st.columns(2)
@@ -154,29 +153,21 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
 
-    # --- 2. SECONDA RIGA: LIVELLO SERVIZIO E COSTO MANTENIMENTO ---
-    col_srv, col_mnt = st.columns(2)
-    with col_srv:
-        livello_servizio = st.selectbox("Livello di Servizio desiderato (%)", [90, 95, 99], index=1)
-    with col_mnt:
-        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
-        costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
-
-    # --- 3. TERZA RIGA: PREZZO E QUANTITA' ---
+    # --- 2. SECONDA RIGA: PREZZO E QUANTITA' ---
     col_prz, col_qta = st.columns(2)
     with col_prz:
         # Prezzo reso NON modificabile ("disabled=True")
-        prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
+        prezzo_unitario = st.number_input("Prezzo Unit. (€)", value=prezzo_base, step=1.0, disabled=True)
     with col_qta:
-        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
+        quantita_ordine = st.number_input("Quantità (Scatole)", value=150, step=10)
 
-
-    # --- 4. QUARTA RIGA: I DUE BOTTONI DI AZIONE ---
+    # --- 3. TERZA RIGA: I DUE BOTTONI DI AZIONE ---
     st.markdown("<br>", unsafe_allow_html=True)
     col_add, col_view = st.columns(2)
     
     with col_add:
-        if st.button("➕ AGGIUNGI ALL'ORDINE"):
+        # type="primary" applica il rosso del CSS
+        if st.button("AGGIUNGI ALL'ORDINE", type="primary"):
             st.session_state['carrello'].append({
                 "Reparto": reparto_scelto,
                 "Prodotto": prodotto_scelto,
@@ -185,16 +176,16 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 "Totale": quantita_ordine * prezzo_unitario
             })
             st.session_state['mostra_carrello'] = True
-            st.success(f"✅ Aggiunte {quantita_ordine} scatole di '{prodotto_scelto}' alla distinta.")
+            st.success(f"Dato acquisito. {quantita_ordine} scatole di '{prodotto_scelto}' in distinta.")
             
     with col_view:
-        st.button("🛒 RIEPILOGO ORDINE", on_click=toggle_carrello)
+        st.button("RIEPILOGO ORDINE", on_click=toggle_carrello)
 
 
     # --- RIEPILOGO ORDINE (VISIBILE SOLO SE ATTIVATO DAL BOTTONE) ---
     if st.session_state['mostra_carrello']:
         st.markdown("---")
-        st.markdown("## 🛒 Distinta Ordine Attuale")
+        st.markdown("## Riepilogo Ordine in Corso")
 
         if len(st.session_state['carrello']) > 0:
             df_carrello = pd.DataFrame(st.session_state['carrello'])
@@ -209,24 +200,49 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 </div>
             """, unsafe_allow_html=True)
             
+            # --- CANCELLAZIONE SINGOLA RIGA ---
+            st.markdown("### Modifica Carrello")
+            opzioni_cancellazione = [f"Riga {i+1} | {item['Prodotto']} - Quantità: {item['Quantità']} sc." for i, item in enumerate(st.session_state['carrello'])]
+            
+            col_sel_del, col_btn_del = st.columns([2, 1])
+            with col_sel_del:
+                prodotto_da_cancellare = st.selectbox("Seleziona il prodotto da rimuovere:", opzioni_cancellazione)
+            with col_btn_del:
+                st.markdown("<br>", unsafe_allow_html=True) # Spazio per allinearlo al selectbox
+                if st.button("CANCELLA PRODOTTO"):
+                    idx = opzioni_cancellazione.index(prodotto_da_cancellare)
+                    st.session_state['carrello'].pop(idx)
+                    st.rerun()
+            
             st.markdown("<br>", unsafe_allow_html=True)
-            col_btn_clear, col_btn_submit = st.columns([1, 2])
+            
+            # --- BOTTONI FINALI ---
+            col_btn_clear, col_btn_submit = st.columns(2)
             
             with col_btn_clear:
-                if st.button("🗑 SVUOTA DISTINTA"):
+                if st.button("SVUOTA DISTINTA"):
                     st.session_state['carrello'] = []
                     st.rerun() 
                     
             with col_btn_submit:
-                if st.button("🚀 TRASMETTI ORDINE AD HAVI"):
-                    st.success("✅ Ordine trasmesso con successo ai sistemi centrali HAVI! Riceverai una notifica di conferma a breve.")
-                    st.balloons()
+                if st.button("TRASMETTI ORDINE AD HAVI", type="primary"):
+                    st.success("Protocollo approvato. Ordine trasmesso con successo ai sistemi HAVI.")
                     st.session_state['carrello'] = [] 
         else:
-            st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto e clicca su 'Aggiungi all'ordine'.")
+            st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto per iniziare.")
 
 
-    # --- CALCOLI EOQ (Nascosti all'utente ma necessari per la visualizzazione) ---
+    # --- ANALISI LOGISTICA (Sempre visibile in basso) ---
+    st.markdown("---")
+    st.markdown(f"### Supporto Decisionale: Analisi Logistica per **{prodotto_scelto}**")
+
+    col_in1, col_in2 = st.columns(2)
+    with col_in1:
+        livello_servizio = st.selectbox("Livello di Servizio (%)", [90, 95, 99], index=1)
+    with col_in2:
+        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
+        costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
+
     df_storico = genera_database_simulato(prodotto_scelto)
     d_media = df_storico['Domanda_Scatole'].mean()
     sigma = df_storico['Domanda_Scatole'].std()
@@ -234,10 +250,8 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
 
-
-    # --- ANALISI LOGISTICA (Sempre visibile in basso) ---
     st.markdown("---")
-    st.markdown("### 📊 Dati Storici di Consumo")
+    st.markdown("### Dati Storici di Consumo")
 
     col_dem1, col_dem2 = st.columns(2)
     with col_dem1:
@@ -246,11 +260,11 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Annua Stimata (D)</div><div class="metric-value">{int(D_annua):,}</div><div class="metric-subtitle">Scatole totali previste</div></div>""".replace(',', '.'), unsafe_allow_html=True) 
 
     st.markdown("---")
-    st.subheader("📦 Suggerimenti dell'Algoritmo (Modello EOQ)")
+    st.subheader("Suggerimenti dell'Algoritmo (Modello EOQ)")
     spazio_algoritmo = st.container() 
 
     st.markdown("---")
-    st.markdown("### 📄 Parametri Contrattuali (Bloccati da Corporate)")
+    st.markdown("### Parametri Contrattuali (Bloccati da Corporate)")
     
     lead_time = 3
     costo_ordine = 50.0
