@@ -21,9 +21,9 @@ h1, h2, h3 {
 }
 
 /* =========================================
-   3. SCHERMATA DI LOGIN (Stile esatto immagine)
+   3. SCHERMATA DI LOGIN
    ========================================= */
-/* Contenitore principale del Form di Login */
+/* Contenitore principale */
 [data-testid="stForm"] {
     background-color: #f4f6f9 !important;
     border: 4px solid #1a2533 !important;
@@ -35,68 +35,52 @@ h1, h2, h3 {
     box-shadow: 0px 15px 30px rgba(0,0,0,0.4) !important;
 }
 
-/* Rimuove lo spazio tra le colonne dentro il form */
-[data-testid="stForm"] [data-testid="stHorizontalBlock"] {
-    gap: 0 !important;
-}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"] { gap: 0 !important; }
 
-/* --- LATO SINISTRO (Sfondo Nero) --- */
-[data-testid="stForm"] [data-testid="column"]:first-child {
-    background-color: #0a111a !important;
-}
-
-.login-left-panel {
-    color: white;
-    padding: 40px 30px;
-    height: 100%;
-    min-height: 380px;
-    display: flex;
-    flex-direction: column;
-}
-
+/* Lato Sinistro (Sfondo Nero) */
+[data-testid="stForm"] [data-testid="column"]:first-child { background-color: #0a111a !important; }
+.login-left-panel { color: white; padding: 40px 30px; height: 100%; min-height: 380px; display: flex; flex-direction: column; }
 .login-brand-row { display: flex; align-items: center; margin-bottom: 20px; }
 .login-brand-m { color: #ffc107; font-size: 26px; font-weight: 900; margin-right: 12px; font-family: Arial, sans-serif; }
 .login-brand-text { font-weight: bold; font-size: 18px; letter-spacing: 1px; }
 .login-desc { color: #a0aec0; font-size: 14px; margin-bottom: 20px; line-height: 1.4; }
-.login-tag { border: 1px solid #ffc107; color: #ffc107; padding: 6px 12px; border-radius: 5px; font-size: 12px; display: inline-block; width: fit-content; margin-bottom: auto; }
-.login-foot-left { color: #4a5568; font-size: 11px; margin-top: auto; padding-top: 60px; }
 
-/* --- LATO DESTRO (Sfondo Grigio/Bianco) --- */
-[data-testid="stForm"] [data-testid="column"]:nth-child(2) {
-    background-color: #f4f5f7 !important;
-    padding: 30px 40px !important;
-}
-
+/* Lato Destro (Sfondo Grigio/Bianco) */
+[data-testid="stForm"] [data-testid="column"]:nth-child(2) { background-color: #f4f5f7 !important; padding: 30px 40px !important; }
 .login-right-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
 .login-title { font-weight: bold; font-size: 18px; color: #1a2533; }
 .login-status { font-size: 12px; color: #555; font-weight: bold; }
 .login-status-dot { color: #4CAF50; font-size: 16px; margin-right: 5px; }
 
-/* Stile degli input specifici nel login */
+/* Stile Input (Accorciati a circa metà larghezza) */
 [data-testid="stForm"] label { color: #1a2533 !important; font-weight: bold !important; font-size: 13px !important; }
 [data-testid="stForm"] input { background-color: white !important; border: 1px solid #ccc !important; color: #000 !important; font-weight: bold !important; }
+[data-testid="stForm"] [data-testid="stTextInput"] { max-width: 55% !important; }
 
-/* Bottone Rosso di Login */
+/* Bottone Login (Accorciato e con fix del colore al passaggio del mouse) */
 [data-testid="stForm"] .stButton > button {
     background-color: #DA291C !important;
-    color: white !important;
+    color: #ffffff !important;
     border-radius: 6px !important;
-    width: 100% !important;
+    max-width: 55% !important;
     font-weight: bold !important;
     padding: 12px !important;
     margin-top: 10px !important;
-    border: none !important;
+    border: 1px solid #DA291C !important;
 }
-[data-testid="stForm"] .stButton > button:hover { background-color: #b02015 !important; }
 
-.login-right-footer { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-top: 20px; }
+[data-testid="stForm"] .stButton > button:hover { 
+    background-color: #b02015 !important; 
+    color: #ffffff !important; /* Forza il testo bianco */
+    border-color: #b02015 !important;
+}
 
 
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
 
-/* Le Card KPI (Lotto, ROP, Sicurezza) */
+/* Le Card KPI */
 .card-kpi {
     background-color: white !important;
     border-radius: 12px !important;
@@ -107,16 +91,14 @@ h1, h2, h3 {
     text-align: center !important;
     transition: all 0.3s ease-in-out !important;
 }
-
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
 .card-kpi-green { border-top-color: #76c04f !important; }
-
 .kpi-titolo { color: #7b8898 !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; }
 .kpi-valore { color: #DA291C !important; font-size: 42px !important; font-weight: 900 !important; margin: 10px 0px !important; }
 .kpi-dettaglio { color: #2c3e50 !important; font-size: 13px !important; font-style: italic !important; }
 
-/* Le Card Blu per i Dati di Consumo Storico */
+/* Le Card Blu per i Consumi */
 .metric-box { 
     background-color: #003366 !important; 
     border-radius: 10px !important; 
@@ -133,7 +115,7 @@ h1, h2, h3 {
 div[data-baseweb="input"] { background-color: white !important; border-radius: 8px !important; border: 1px solid #cccccc !important; transition: 0.2s; }
 div[data-baseweb="input"]:focus-within { border: 2px solid #4285f4 !important; box-shadow: 0 0 10px rgba(66, 133, 244, 0.3) !important; }
 
-/* Bottoni Verdi per l'App (Escluso il form di login che è sovrascritto in alto) */
+/* Bottoni Verdi per l'App */
 .stButton > button {
     background-color: #76c04f !important;
     color: white !important;
@@ -145,5 +127,5 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #4285f4 !important; b
     transition: all 0.3s !important;
     border: none !important;
 }
-.stButton > button:hover { background-color: #5da03b !important; transform: scale(1.03) !important; }
+.stButton > button:hover { background-color: #5da03b !important; transform: scale(1.03) !important; color: white !important; }
 .stButton > button:active { transform: scale(0.97) !important; }
