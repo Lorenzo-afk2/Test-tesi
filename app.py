@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import os
+import plotly.express as px
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
@@ -72,7 +73,7 @@ if not st.session_state['autenticato']:
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
 catalogo_prodotti = {
-    "❄️️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
+    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
     "🥬 Fresco": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
     "📦 Secco": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
     "🧹 Operativo": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"]
@@ -142,7 +143,7 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
-    st.markdown("Seleziona il prodotto e la quantità da ordinare.")
+    st.markdown("Seleziona il prodotto e i relativi parametri, poi aggiungilo alla distinta d'ordine.")
 
     # --- 1. PRIMA RIGA: REPARTO E PRODOTTO ---
     col_rep, col_prod = st.columns(2)
@@ -153,20 +154,27 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
 
-    # --- 2. SECONDA RIGA: PREZZO E QUANTITA' ---
+    # --- 2. SECONDA RIGA: LIVELLO SERVIZIO E COSTO MANTENIMENTO (Spostati qui) ---
+    col_srv, col_mnt = st.columns(2)
+    with col_srv:
+        livello_servizio = st.selectbox("Livello di Servizio desiderato (%)", [90, 95, 99], index=1)
+    with col_mnt:
+        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
+        costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
+
+    # --- 3. TERZA RIGA: PREZZO E QUANTITA' ---
     col_prz, col_qta = st.columns(2)
     with col_prz:
-        # Prezzo reso NON modificabile ("disabled=True")
-        prezzo_unitario = st.number_input("Prezzo Unit. (€)", value=prezzo_base, step=1.0, disabled=True)
+        prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
     with col_qta:
-        quantita_ordine = st.number_input("Quantità (Scatole)", value=150, step=10)
+        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
 
-    # --- 3. TERZA RIGA: I DUE BOTTONI DI AZIONE ---
+    # --- 4. QUARTA RIGA: I DUE BOTTONI DI AZIONE ---
     st.markdown("<br>", unsafe_allow_html=True)
     col_add, col_view = st.columns(2)
     
     with col_add:
-        # type="primary" applica il rosso del CSS
+        # type="primary" applica il nuovo Blu Corporate elegante
         if st.button("AGGIUNGI ALL'ORDINE", type="primary"):
             st.session_state['carrello'].append({
                 "Reparto": reparto_scelto,
@@ -188,10 +196,21 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.markdown("## Riepilogo Ordine in Corso")
 
         if len(st.session_state['carrello']) > 0:
-            df_carrello = pd.DataFrame(st.session_state['carrello'])
-            st.dataframe(df_carrello.drop(columns=['Totale']), use_container_width=True, hide_index=True)
+            # Creazione della tabella con colonna esplicita per il Numero Riga
+            dati_tabella = []
+            for i, item in enumerate(st.session_state['carrello']):
+                dati_tabella.append({
+                    "N° Riga": i + 1,
+                    "Reparto": item["Reparto"],
+                    "Prodotto": item["Prodotto"],
+                    "Quantità": item["Quantità"],
+                    "Prezzo Unit.": item["Prezzo Unit."]
+                })
             
-            totale_complessivo = df_carrello['Totale'].sum()
+            df_carrello_visivo = pd.DataFrame(dati_tabella)
+            st.dataframe(df_carrello_visivo, use_container_width=True, hide_index=True)
+            
+            totale_complessivo = sum([item["Totale"] for item in st.session_state['carrello']])
             
             st.markdown(f"""
                 <div class="cart-total-box">
@@ -200,15 +219,15 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- CANCELLAZIONE SINGOLA RIGA ---
+            # --- CANCELLAZIONE SINGOLA RIGA TRAMITE NUMERO RIGA CHIARO ---
             st.markdown("### Modifica Carrello")
-            opzioni_cancellazione = [f"Riga {i+1} | {item['Prodotto']} - Quantità: {item['Quantità']} sc." for i, item in enumerate(st.session_state['carrello'])]
+            opzioni_cancellazione = [f"Riga {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità']})" for i, item in enumerate(st.session_state['carrello'])]
             
             col_sel_del, col_btn_del = st.columns([2, 1])
             with col_sel_del:
-                prodotto_da_cancellare = st.selectbox("Seleziona il prodotto da rimuovere:", opzioni_cancellazione)
+                prodotto_da_cancellare = st.selectbox("Seleziona la riga da rimuovere:", opzioni_cancellazione)
             with col_btn_del:
-                st.markdown("<br>", unsafe_allow_html=True) # Spazio per allinearlo al selectbox
+                st.markdown("<br>", unsafe_allow_html=True) 
                 if st.button("CANCELLA PRODOTTO"):
                     idx = opzioni_cancellazione.index(prodotto_da_cancellare)
                     st.session_state['carrello'].pop(idx)
@@ -232,17 +251,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto per iniziare.")
 
 
-    # --- ANALISI LOGISTICA (Sempre visibile in basso) ---
-    st.markdown("---")
-    st.markdown(f"### Supporto Decisionale: Analisi Logistica per **{prodotto_scelto}**")
-
-    col_in1, col_in2 = st.columns(2)
-    with col_in1:
-        livello_servizio = st.selectbox("Livello di Servizio (%)", [90, 95, 99], index=1)
-    with col_in2:
-        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
-        costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
-
+    # --- CALCOLI EOQ ---
     df_storico = genera_database_simulato(prodotto_scelto)
     d_media = df_storico['Domanda_Scatole'].mean()
     sigma = df_storico['Domanda_Scatole'].std()
@@ -250,6 +259,8 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
 
+
+    # --- ANALISI LOGISTICA (In basso per consultazione) ---
     st.markdown("---")
     st.markdown("### Dati Storici di Consumo")
 
