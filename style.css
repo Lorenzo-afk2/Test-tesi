@@ -8,7 +8,6 @@ footer {visibility: hidden !important; display: none !important;}
 [data-testid="stHeader"] { background-color: transparent !important; }
 .stDeployButton { visibility: hidden !important; display: none !important; }
 
-/* Nasconde il simbolo della catenella vicino a tutte le scritte/titoli */
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 .st-emotion-cache-1jiq4b0 { display: none !important; }
@@ -54,19 +53,17 @@ h1, h2, h3 {
 [data-testid="stForm"] input { background-color: white !important; border: 1px solid #ccc !important; color: #000 !important; font-weight: bold !important; }
 [data-testid="stForm"] [data-testid="stTextInput"] { max-width: 55% !important; }
 
-/* Bottoni dentro il Login (Mantengono il rosso) */
 [data-testid="stForm"] button[kind="primary"], [data-testid="stForm"] button[kind="secondary"], [data-testid="stForm"] div.stButton > button {
     background-color: #DA291C !important; color: #ffffff !important; border-radius: 6px !important; max-width: 55% !important; font-weight: bold !important; padding: 12px !important; margin-top: 10px !important; border: 1px solid #DA291C !important;
 }
 [data-testid="stForm"] button[kind="primary"]:hover, [data-testid="stForm"] button[kind="secondary"]:hover, [data-testid="stForm"] div.stButton > button:hover { 
-    background-color: #b02015 !important; color: #ffffff !important; border: 1px solid #b02015 !important; opacity: 1 !important;
+    background-color: #b02015 !important; color: #ffffff !important; border-color: #b02015 !important; opacity: 1 !important;
 }
 
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
 
-/* Suggerimenti EOQ */
 .card-kpi { background-color: white !important; border-radius: 12px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.3s ease-in-out !important; }
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
@@ -75,13 +72,11 @@ h1, h2, h3 {
 .kpi-valore { color: #DA291C !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } 
 .kpi-dettaglio { color: #2c3e50 !important; font-size: 12px !important; font-style: italic !important; }
 
-/* Dati Storici Consumo */
 .metric-box { background-color: #003366 !important; border-radius: 12px !important; padding: 20px 15px !important; margin: 10px 0px !important; text-align: center !important; border-bottom: 4px solid #ffc107 !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; }
 .metric-title { color: #ffffff !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
 .metric-value { color: #ffc107 !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } 
 .metric-subtitle { color: white !important; font-size: 12px !important; font-style: italic !important; }
 
-/* Home Page */
 .card-kpi-mini { background-color: white !important; border-radius: 10px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.12) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.2s ease-in-out !important; }
 .card-kpi-mini:hover { transform: translateY(-4px) !important; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2) !important; }
 .card-kpi-mini-yellow { border-top-color: #f2a900 !important; }
@@ -90,18 +85,16 @@ h1, h2, h3 {
 .card-kpi-mini .kpi-valore { color: #DA291C !important; font-size: 30px !important; font-weight: 900 !important; margin: 8px 0px !important; }
 .kpi-valore-green { color: #76c04f !important; }
 
-/* Parametri Contrattuali (Sola Lettura) */
 .contract-box { background-color: #e2e8f0 !important; border-radius: 8px !important; padding: 15px !important; border-left: 5px solid #7b8898 !important; color: #1a2533 !important; margin: 5px 0px !important; box-shadow: inset 0px 0px 5px rgba(0,0,0,0.05) !important; }
 .contract-title { font-size: 13px !important; font-weight: bold !important; text-transform: uppercase !important; color: #4a5568 !important; margin-bottom: 5px !important; }
 .contract-value { font-size: 22px !important; font-weight: 900 !important; color: #1a2533 !important; }
 
-/* Input Generali */
 div[data-baseweb="input"] { background-color: white !important; border-radius: 8px !important; border: 1px solid #cccccc !important; transition: 0.2s; }
-div[data-baseweb="input"]:focus-within { border: 2px solid #DA291C !important; box-shadow: 0 0 10px rgba(218, 41, 28, 0.3) !important; }
+div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; box-shadow: 0 0 10px rgba(0, 51, 102, 0.3) !important; }
 
 /* --- STILE BOTTONI APP PRINCIPALE --- */
 
-/* 1. Bottoni Secondari (Riepilogo, Cancella Prodotto, Svuota Distinta) */
+/* Bottoni Secondari (Riepilogo, Cancella Prodotto, Svuota Distinta) */
 .stButton > button { 
     background-color: #ffffff !important; 
     color: #1a2533 !important; 
@@ -114,27 +107,26 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #DA291C !important; b
     transition: all 0.2s ease !important; 
 }
 .stButton > button:hover { 
-    border-color: #DA291C !important; 
-    color: #DA291C !important; 
-    background-color: #fff5f5 !important; 
+    border-color: #003366 !important; 
+    color: #003366 !important; 
+    background-color: #f1f5f9 !important; 
     transform: translateY(-2px) !important; 
-    box-shadow: 0px 4px 10px rgba(218, 41, 28, 0.15) !important; 
+    box-shadow: 0px 4px 10px rgba(0, 51, 102, 0.15) !important; 
 }
 .stButton > button:active { transform: scale(0.98) !important; }
 
-/* 2. Bottoni Primari (Aggiungi all'Ordine, Trasmetti ad HAVI) */
+/* Bottoni Primari (Aggiungi all'Ordine, Trasmetti ad HAVI) - Ora in Blu Scuro Corporate */
 .stButton > button[kind="primary"] { 
-    background-color: #DA291C !important; 
+    background-color: #003366 !important; 
     color: #ffffff !important; 
-    border: 2px solid #DA291C !important; 
+    border: 2px solid #003366 !important; 
 }
 .stButton > button[kind="primary"]:hover { 
-    background-color: #b02015 !important; 
-    color: #ffffff !important; 
-    border-color: #b02015 !important; 
-    box-shadow: 0px 6px 12px rgba(218, 41, 28, 0.3) !important; 
+    background-color: #001a33 !important; 
+    color: #ffc107 !important; /* Giallo McDonald's al passaggio del mouse */
+    border-color: #ffc107 !important; 
+    box-shadow: 0px 6px 12px rgba(0, 51, 102, 0.3) !important; 
 }
-
 
 /* =========================================
    5. STILE DEL CARRELLO ORDINI
@@ -152,7 +144,6 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #DA291C !important; b
 }
 .cart-total-label { color: #ffffff !important; font-size: 18px !important; font-weight: bold !important; text-transform: uppercase !important;}
 .cart-total-value { color: #ffc107 !important; font-size: 28px !important; font-weight: 900 !important; }
-
 
 /* =========================================
    6. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
