@@ -42,7 +42,6 @@ if not st.session_state['autenticato']:
             st.markdown("""
                 <div class="login-right-header">
                     <div class="login-title">Accesso Store Manager</div>
-                    <div class="login-status"><span class="login-status-dot">●</span> Server Attivo</div>
                 </div>
             """, unsafe_allow_html=True)
             
@@ -146,7 +145,7 @@ z = z_scores[livello_servizio]
 
 
 # =====================================================================
-# 7. DATI DI CONSUMO (Card Blu)
+# 7. DATI DI CONSUMO 
 # =====================================================================
 st.markdown("---")
 st.markdown("### 📊 Dati Storici di Consumo")
