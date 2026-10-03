@@ -154,7 +154,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
 
-    # --- 2. SECONDA RIGA: LIVELLO SERVIZIO E COSTO MANTENIMENTO (Spostati qui) ---
+    # --- 2. SECONDA RIGA: LIVELLO SERVIZIO E COSTO MANTENIMENTO ---
     col_srv, col_mnt = st.columns(2)
     with col_srv:
         livello_servizio = st.selectbox("Livello di Servizio desiderato (%)", [90, 95, 99], index=1)
@@ -174,7 +174,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     col_add, col_view = st.columns(2)
     
     with col_add:
-        # type="primary" applica il nuovo Blu Corporate elegante
         if st.button("AGGIUNGI ALL'ORDINE", type="primary"):
             st.session_state['carrello'].append({
                 "Reparto": reparto_scelto,
@@ -196,7 +195,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.markdown("## Riepilogo Ordine in Corso")
 
         if len(st.session_state['carrello']) > 0:
-            # Creazione della tabella con colonna esplicita per il Numero Riga
             dati_tabella = []
             for i, item in enumerate(st.session_state['carrello']):
                 dati_tabella.append({
@@ -219,7 +217,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- CANCELLAZIONE SINGOLA RIGA TRAMITE NUMERO RIGA CHIARO ---
+            # --- CANCELLAZIONE SINGOLA RIGA ---
             st.markdown("### Modifica Carrello")
             opzioni_cancellazione = [f"Riga {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità']})" for i, item in enumerate(st.session_state['carrello'])]
             
@@ -235,11 +233,11 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- BOTTONI FINALI ---
+            # --- BOTTONI FINALI (Rinominato in Cancella Tutto) ---
             col_btn_clear, col_btn_submit = st.columns(2)
             
             with col_btn_clear:
-                if st.button("SVUOTA DISTINTA"):
+                if st.button("CANCELLA TUTTO"):
                     st.session_state['carrello'] = []
                     st.rerun() 
                     
