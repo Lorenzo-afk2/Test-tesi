@@ -79,13 +79,13 @@ h1, h2, h3 {
 .kpi-valore { color: #DA291C !important; font-size: 42px !important; font-weight: 900 !important; margin: 10px 0px !important; }
 .kpi-dettaglio { color: #2c3e50 !important; font-size: 13px !important; font-style: italic !important; }
 
-/* NUOVO: Card KPI Mini (Usate nella Home Page) */
-.card-kpi-mini { background-color: white !important; border-radius: 8px !important; padding: 12px 10px !important; margin: 5px 0px !important; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15) !important; border-top: 4px solid #DA291C !important; text-align: center !important; transition: all 0.2s ease-in-out !important; }
-.card-kpi-mini:hover { transform: translateY(-4px) !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; }
+/* NUOVO: Card KPI Mini (MISURA MEDIA PER LA HOME PAGE) */
+.card-kpi-mini { background-color: white !important; border-radius: 10px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.12) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.2s ease-in-out !important; }
+.card-kpi-mini:hover { transform: translateY(-4px) !important; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2) !important; }
 .card-kpi-mini-yellow { border-top-color: #f2a900 !important; }
 .card-kpi-mini-green { border-top-color: #76c04f !important; }
-.card-kpi-mini .kpi-titolo { color: #7b8898 !important; font-size: 11px !important; font-weight: bold !important; text-transform: uppercase !important; }
-.card-kpi-mini .kpi-valore { color: #DA291C !important; font-size: 22px !important; font-weight: 900 !important; margin: 2px 0px !important; }
+.card-kpi-mini .kpi-titolo { color: #7b8898 !important; font-size: 13px !important; font-weight: bold !important; text-transform: uppercase !important; }
+.card-kpi-mini .kpi-valore { color: #DA291C !important; font-size: 30px !important; font-weight: 900 !important; margin: 8px 0px !important; }
 .kpi-valore-green { color: #76c04f !important; }
 
 /* Card Blu per i Consumi */
