@@ -45,7 +45,7 @@ if not st.session_state['autenticato']:
                 </div>
             """, unsafe_allow_html=True)
             
-            username = st.text_input("Codice Ristorante o ID Utente", value="IT-07100-SASSARI")
+            username = st.text_input("Codice Ristorante o ID Utente")
             password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password")
             
             submitted = st.form_submit_button("Accedi allo store")
