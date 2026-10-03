@@ -43,14 +43,12 @@ if not st.session_state['autenticato']:
                 </div>
             """, unsafe_allow_html=True)
             
-            # Credenziali mantenute come da tua richiesta
             username = st.text_input("Codice Ristorante o ID Utente", value="IT-1048-MILANO-DUOMO")
             password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password")
             
             submitted = st.form_submit_button("Accedi allo store")
             
         if submitted:
-            # Check esatto con le tue credenziali
             if username == "IT-1048-MILANO-DUOMO" and password == "logistica":
                 st.session_state['autenticato'] = True
                 st.rerun() 
@@ -102,7 +100,7 @@ pagina_selezionata = st.sidebar.radio(
 
 st.sidebar.markdown("---")
 
-if st.sidebar.button("🚪 Esci e disconnetti"):
+if st.sidebar.button("🚪 Log out"):
     st.session_state['autenticato'] = False
     st.rerun()
 
