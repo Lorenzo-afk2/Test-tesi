@@ -63,7 +63,7 @@ if not st.session_state['autenticato']:
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
 catalogo_prodotti = {
-    "❄️️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
+    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
     "🥬 Fresco": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
     "📦 Secco": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
     "🧹 Operativo": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"]
@@ -192,12 +192,28 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     spazio_algoritmo = st.container() 
 
     st.markdown("---")
-    st.markdown("### 📄 Parametri Contrattuali")
+    st.markdown("### 📄 Parametri Contrattuali (Bloccati da Corporate)")
+    
+    # Variabili fisse nel motore Python (non più modificabili)
+    lead_time = 3
+    costo_ordine = 50.0
+
+    # Interfaccia di sola lettura con le nuove Card CSS grigie
     col_c1, col_c2 = st.columns(2)
     with col_c1:
-        lead_time = st.number_input("Lead Time di Consegna (Giorni) [L]", value=3, step=1)
+        st.markdown(f"""
+            <div class="contract-box">
+                <div class="contract-title">Lead Time di Consegna [L]</div>
+                <div class="contract-value">🔒 {lead_time} Giorni</div>
+            </div>
+        """, unsafe_allow_html=True)
     with col_c2:
-        costo_ordine = st.number_input("Costo Fisso di Consegna/Ordine (€) [Co]", value=50.0, step=5.0)
+        st.markdown(f"""
+            <div class="contract-box">
+                <div class="contract-title">Costo Fisso di Consegna/Ordine [Co]</div>
+                <div class="contract-value">🔒 {costo_ordine} €</div>
+            </div>
+        """, unsafe_allow_html=True)
 
     eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
     scorta_sicurezza = z * sigma * math.sqrt(lead_time)
