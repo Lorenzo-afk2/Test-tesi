@@ -73,7 +73,7 @@ if not st.session_state['autenticato']:
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
 catalogo_prodotti = {
-    "❄ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
+    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
     "🥬 Fresco": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
     "📦 Secco": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
     "🧹 Operativo": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"]
@@ -143,7 +143,7 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
-    st.markdown("Seleziona il prodotto e la quantità da ordinare.")
+    st.markdown("Seleziona il prodotto e i relativi parametri, poi aggiungilo alla distinta d'ordine.")
 
     # --- 1. PRIMA RIGA: REPARTO E PRODOTTO ---
     col_rep, col_prod = st.columns(2)
@@ -154,15 +154,24 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
 
-    # --- 2. SECONDA RIGA: PREZZO E QUANTITA' ---
+    # --- 2. SECONDA RIGA: LIVELLO SERVIZIO E COSTO MANTENIMENTO ---
+    col_srv, col_mnt = st.columns(2)
+    with col_srv:
+        livello_servizio = st.selectbox("Livello di Servizio desiderato (%)", [90, 95, 99], index=1)
+    with col_mnt:
+        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
+        costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
+
+    # --- 3. TERZA RIGA: PREZZO E QUANTITA' ---
     col_prz, col_qta = st.columns(2)
     with col_prz:
         # Prezzo reso NON modificabile ("disabled=True")
-        prezzo_unitario = st.number_input("Prezzo Unit. (€)", value=prezzo_base, step=1.0, disabled=True)
+        prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
     with col_qta:
-        quantita_ordine = st.number_input("Quantità (Scatole)", value=150, step=10)
+        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
 
-    # --- 3. TERZA RIGA: I DUE BOTTONI DI AZIONE ---
+
+    # --- 4. QUARTA RIGA: I DUE BOTTONI DI AZIONE ---
     st.markdown("<br>", unsafe_allow_html=True)
     col_add, col_view = st.columns(2)
     
@@ -217,17 +226,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto e clicca su 'Aggiungi all'ordine'.")
 
 
-    # --- ANALISI LOGISTICA (Sempre visibile in basso) ---
-    st.markdown("---")
-    st.markdown(f"### ⚙️️ Supporto Decisionale: Analisi Logistica per **{prodotto_scelto}**")
-
-    col_in1, col_in2 = st.columns(2)
-    with col_in1:
-        livello_servizio = st.selectbox("Livello di Servizio (%)", [90, 95, 99], index=1)
-    with col_in2:
-        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
-        costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
-
+    # --- CALCOLI EOQ (Nascosti all'utente ma necessari per la visualizzazione) ---
     df_storico = genera_database_simulato(prodotto_scelto)
     d_media = df_storico['Domanda_Scatole'].mean()
     sigma = df_storico['Domanda_Scatole'].std()
@@ -235,6 +234,8 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
 
+
+    # --- ANALISI LOGISTICA (Sempre visibile in basso) ---
     st.markdown("---")
     st.markdown("### 📊 Dati Storici di Consumo")
 
