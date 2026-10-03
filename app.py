@@ -20,9 +20,15 @@ if os.path.exists("style.css"):
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
 
-# Creiamo il carrello vuoto nella memoria della sessione
 if 'carrello' not in st.session_state:
     st.session_state['carrello'] = []
+
+if 'mostra_carrello' not in st.session_state:
+    st.session_state['mostra_carrello'] = False
+
+def toggle_carrello():
+    st.session_state['mostra_carrello'] = not st.session_state['mostra_carrello']
+
 
 if not st.session_state['autenticato']:
     st.markdown("<br><br>", unsafe_allow_html=True)
@@ -67,7 +73,7 @@ if not st.session_state['autenticato']:
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
 catalogo_prodotti = {
-    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
+    "❄️️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
     "🥬 Fresco": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
     "📦 Secco": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
     "🧹 Operativo": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"]
@@ -137,27 +143,80 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
-    st.markdown("Seleziona il prodotto, analizza i parametri e aggiungilo alla distinta d'ordine.")
+    st.markdown("Seleziona il prodotto e la quantità da ordinare.")
 
-    # --- FASE 1: SCELTA PRODOTTO ---
-    col_rep, col_prod = st.columns(2)
-    with col_rep:
-        reparto_scelto = st.selectbox("1. Seleziona il Reparto", list(catalogo_prodotti.keys()))
-    with col_prod:
-        prodotto_scelto = st.selectbox("2. Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
-
-    prezzo_base = prezzi_prodotti[prodotto_scelto]
-
-    col_prz, col_qta = st.columns(2)
-    with col_prz:
-        prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0)
-    with col_qta:
-        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
-
-    st.markdown("---")
+    # --- 1. RIGA IN ALTO: SCELTA PRODOTTO, PREZZO (BLOCCATO) E QUANTITA' ---
+    col_rep, col_prod, col_prz, col_qta = st.columns([1.5, 1.5, 1, 1])
     
-    # --- FASE 2: ANALISI LOGISTICA ---
-    st.markdown(f"### ⚙️ Parametri Operativi per: **{prodotto_scelto}**")
+    with col_rep:
+        reparto_scelto = st.selectbox("Reparto", list(catalogo_prodotti.keys()))
+    with col_prod:
+        prodotto_scelto = st.selectbox("Prodotto", catalogo_prodotti[reparto_scelto])
+        prezzo_base = prezzi_prodotti[prodotto_scelto]
+    with col_prz:
+        # Prezzo reso NON modificabile ("disabled=True")
+        prezzo_unitario = st.number_input("Prezzo Unit. (€)", value=prezzo_base, step=1.0, disabled=True)
+    with col_qta:
+        quantita_ordine = st.number_input("Quantità (Scatole)", value=150, step=10)
+
+    # --- 2. SUBITO SOTTO: I DUE BOTTONI DI AZIONE ---
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_add, col_view = st.columns(2)
+    
+    with col_add:
+        if st.button("➕ AGGIUNGI ALL'ORDINE"):
+            st.session_state['carrello'].append({
+                "Reparto": reparto_scelto,
+                "Prodotto": prodotto_scelto,
+                "Quantità": quantita_ordine,
+                "Prezzo Unit.": f"{prezzo_unitario:.2f} €",
+                "Totale": quantita_ordine * prezzo_unitario
+            })
+            st.session_state['mostra_carrello'] = True
+            st.success(f"✅ Aggiunte {quantita_ordine} scatole di '{prodotto_scelto}' alla distinta.")
+            
+    with col_view:
+        st.button("🛒 RIEPILOGO ORDINE", on_click=toggle_carrello)
+
+
+    # --- 3. RIEPILOGO ORDINE (VISIBILE SOLO SE ATTIVATO DAL BOTTONE) ---
+    if st.session_state['mostra_carrello']:
+        st.markdown("---")
+        st.markdown("## 🛒 Distinta Ordine Attuale")
+
+        if len(st.session_state['carrello']) > 0:
+            df_carrello = pd.DataFrame(st.session_state['carrello'])
+            st.dataframe(df_carrello.drop(columns=['Totale']), use_container_width=True, hide_index=True)
+            
+            totale_complessivo = df_carrello['Totale'].sum()
+            
+            st.markdown(f"""
+                <div class="cart-total-box">
+                    <div class="cart-total-label">Totale Provvisorio Ordine:</div>
+                    <div class="cart-total-value">{totale_complessivo:,.2f} €</div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            col_btn_clear, col_btn_submit = st.columns([1, 2])
+            
+            with col_btn_clear:
+                if st.button("🗑 SVUOTA DISTINTA"):
+                    st.session_state['carrello'] = []
+                    st.rerun() 
+                    
+            with col_btn_submit:
+                if st.button("🚀 TRASMETTI ORDINE AD HAVI"):
+                    st.success("✅ Ordine trasmesso con successo ai sistemi centrali HAVI! Riceverai una notifica di conferma a breve.")
+                    st.balloons()
+                    st.session_state['carrello'] = [] 
+        else:
+            st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto e clicca su 'Aggiungi all'ordine'.")
+
+
+    # --- 4. ANALISI LOGISTICA (Sembra sempre visibile in basso) ---
+    st.markdown("---")
+    st.markdown(f"### ⚙️ Supporto Decisionale: Analisi Logistica per **{prodotto_scelto}**")
 
     col_in1, col_in2 = st.columns(2)
     with col_in1:
@@ -211,67 +270,9 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         with col_kpi3:
             st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta di Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura imprevisti</div></div>""", unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # --- FASE 3: AGGIUNTA AL CARRELLO ---
-    _, col_btn_add, _ = st.columns([1, 2, 1])
-    with col_btn_add:
-        if st.button("➕ AGGIUNGI ALL'ORDINE"):
-            # Salva i dati del prodotto scelto nella memoria della sessione
-            st.session_state['carrello'].append({
-                "Reparto": reparto_scelto,
-                "Prodotto": prodotto_scelto,
-                "Quantità": quantita_ordine,
-                "Prezzo Unit.": f"{prezzo_unitario:.2f} €",
-                "Totale": quantita_ordine * prezzo_unitario
-            })
-            st.success(f"✅ {quantita_ordine} scatole di '{prodotto_scelto}' aggiunte alla distinta.")
-
-
-    # --- FASE 4: RIEPILOGO E TRASMISSIONE ---
-    st.markdown("---")
-    st.markdown("## 🛒 Riepilogo Ordine in Corso")
-
-    if len(st.session_state['carrello']) > 0:
-        # Crea la tabella visiva partendo dalla memoria
-        df_carrello = pd.DataFrame(st.session_state['carrello'])
-        
-        # Mostra la tabella formattata
-        st.dataframe(df_carrello.drop(columns=['Totale']), use_container_width=True, hide_index=True)
-        
-        # Calcola la somma matematica totale
-        totale_complessivo = df_carrello['Totale'].sum()
-        
-        # Stampa il box del totale con la nuova classe CSS
-        st.markdown(f"""
-            <div class="cart-total-box">
-                <div class="cart-total-label">Totale Provvisorio Ordine:</div>
-                <div class="cart-total-value">{totale_complessivo:,.2f} €</div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Bottoni finali: Trasmetti o Svuota
-        col_btn_clear, col_btn_submit = st.columns([1, 2])
-        
-        with col_btn_clear:
-            if st.button("🗑️️ SVUOTA DISTINTA"):
-                st.session_state['carrello'] = []
-                st.rerun() # Ricarica per azzerare la vista
-                
-        with col_btn_submit:
-            if st.button("🚀 TRASMETTI ORDINE AD HAVI"):
-                st.success("✅ Ordine trasmesso con successo ai sistemi centrali HAVI! Riceverai una notifica di conferma a breve.")
-                st.balloons()
-                st.session_state['carrello'] = [] # Svuota il carrello dopo l'invio
-                
-    else:
-        st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto e clicca su 'Aggiungi all'ordine'.")
-
 
 # =====================================================================
-# 7. ROUTING: INVENTARIO E FILE CONSUMAZIONI
+# 7. ROUTING: INVENTARIO (Pagina Segnaposto)
 # =====================================================================
 elif pagina_selezionata == "📋 Inventario":
     st.title("📋 Inventario di Magazzino")
@@ -284,6 +285,10 @@ elif pagina_selezionata == "📋 Inventario":
     })
     st.dataframe(df_inventario, use_container_width=True, hide_index=True)
 
+
+# =====================================================================
+# 8. ROUTING: FILE CONSUMAZIONI (Pagina Segnaposto)
+# =====================================================================
 elif pagina_selezionata == "📄 File Consumazioni":
     st.title("📄 File Consumazioni")
     st.markdown("Carica il file esportato dalle casse (formato CSV o Excel) per aggiornare il database storico.")
