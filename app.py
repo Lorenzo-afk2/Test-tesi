@@ -4,8 +4,6 @@ import numpy as np
 import math
 import os
 import plotly.express as px
-from datetime import datetime
-import pytz
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
@@ -116,12 +114,7 @@ if st.sidebar.button("🚪 Log out"):
 if pagina_selezionata == "🏠 Home Page":
     st.title("Dashboard Direzionale | IT-07100-SASSARI")
     
-    # Sottotitolo con data e ora in tempo reale (Fuso orario italiano)
-    tz = pytz.timezone('Europe/Rome')
-    data_ora_attuale = datetime.now(tz).strftime('%d/%m/%Y, %H:%M')
-    
-    st.markdown("#### Benvenuto nel sistema di gestione logistica.")
-    st.markdown(f"*(Dati aggiornati al: {data_ora_attuale})*")
+    st.markdown("#### Benvenuto nel sistema di gestione logistica. Seleziona un modulo dal menu laterale per iniziare.")
     
     st.markdown("---")
     st.subheader("Stato Operativo Ristorante")
