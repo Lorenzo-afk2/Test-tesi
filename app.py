@@ -43,23 +43,25 @@ if not st.session_state['autenticato']:
                 </div>
             """, unsafe_allow_html=True)
             
-            username = st.text_input("Codice Ristorante o ID Utente")
+            # Credenziali mantenute come da tua richiesta
+            username = st.text_input("Codice Ristorante o ID Utente", value="IT-1048-MILANO-DUOMO")
             password = st.text_input("Chiave di Sicurezza (PIN / Password)", type="password")
             
             submitted = st.form_submit_button("Accedi allo store")
             
         if submitted:
-            if username == "IT-07100-SASSARI" and password == "RistoranteSS":
+            # Check esatto con le tue credenziali
+            if username == "IT-1048-MILANO-DUOMO" and password == "logistica":
                 st.session_state['autenticato'] = True
                 st.rerun() 
             else:
-                st.error("❌ Credenziali errate. Riprova. (Usa password: logistica)")
+                st.error("❌ Credenziali errate. Riprova.")
     
     st.stop() 
 
 
 # =====================================================================
-# 3. DATI IN MEMORIA (Sempre disponibili in tutte le pagine)
+# 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
 catalogo_prodotti = {
     "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
@@ -93,7 +95,6 @@ def genera_database_simulato(nome_prodotto):
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/McDonald%27s_Golden_Arches.svg/120px-McDonald%27s_Golden_Arches.svg.png", width=60)
 st.sidebar.title("Menu Principale")
 
-# Il selettore di pagine (La Home è la prima della lista, quindi si aprirà di default)
 pagina_selezionata = st.sidebar.radio(
     "",
     ["🏠 Home Page", "📦 Compilazione Ordine", "📋 Inventario", "📄 File Consumazioni"]
@@ -101,8 +102,7 @@ pagina_selezionata = st.sidebar.radio(
 
 st.sidebar.markdown("---")
 
-# Tasto di Logout in fondo alla sidebar
-if st.sidebar.button("🚪 Logout"):
+if st.sidebar.button("🚪 Esci e disconnetti"):
     st.session_state['autenticato'] = False
     st.rerun()
 
@@ -117,7 +117,6 @@ if pagina_selezionata == "🏠 Home Page":
     st.markdown("---")
     st.subheader("Stato Operativo Ristorante")
     
-    # 3 Card fittizie per rendere la Home Page professionale
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("""<div class="card-kpi"><div class="kpi-titolo">Stato Rifornimenti</div><div class="kpi-valore" style="color: #76c04f;">REGOLARE</div></div>""", unsafe_allow_html=True)
@@ -128,7 +127,7 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE (Il vecchio codice)
+# 6. ROUTING: COMPILAZIONE ORDINE
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
@@ -228,7 +227,6 @@ elif pagina_selezionata == "📋 Inventario":
     st.title("📋 Inventario di Magazzino")
     st.markdown("Visualizzazione giacenze attuali in tempo reale.")
     
-    # Tabella visiva segnaposto
     df_inventario = pd.DataFrame({
         "Reparto": ["Congelato", "Congelato", "Fresco", "Secco", "Operativo"],
         "Prodotto": ["Hamburger di Manzo 4:1", "Patatine Fritte", "Pomodori a Fette", "Panini Regular", "Guanti Nitrile"],
@@ -245,7 +243,6 @@ elif pagina_selezionata == "📄 File Consumazioni":
     st.title("📄 File Consumazioni")
     st.markdown("Carica il file esportato dalle casse (formato CSV o Excel) per aggiornare il database storico.")
     
-    # Componente grafico per il caricamento file
     file_caricato = st.file_uploader("Trascina qui il file", type=['csv', 'xlsx'])
     if file_caricato:
         st.success("✅ File caricato ed elaborato con successo. I dati sono stati aggiornati.")
