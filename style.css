@@ -2,13 +2,13 @@
    HAVIConnect - Design System Enterprise 
    ========================================= */
 
-/* 1. PULIZIA GENERALE, FIX SIDEBAR E FIX TESTI */
+/* 1. PULIZIA GENERALE E FIX TESTI */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 [data-testid="stHeader"] { background-color: transparent !important; }
 .stDeployButton { visibility: hidden !important; display: none !important; }
 
-/* Nasconde il fastidioso simbolo della catenella (ancora) vicino a tutte le scritte/titoli */
+/* Nasconde il simbolo della catenella vicino a tutte le scritte/titoli */
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 .st-emotion-cache-1jiq4b0 { display: none !important; }
@@ -42,7 +42,6 @@ h1, h2, h3 {
 
 [data-testid="stForm"] [data-testid="stHorizontalBlock"] { gap: 0 !important; }
 
-/* Lato Sinistro (Sfondo Bianco) */
 [data-testid="stForm"] [data-testid="column"]:first-child { background-color: #ffffff !important; }
 .login-left-panel { padding: 40px 30px; height: 100%; min-height: 380px; display: flex; flex-direction: column; }
 .login-brand-row { display: flex; align-items: center; margin-bottom: 20px; }
@@ -50,7 +49,6 @@ h1, h2, h3 {
 .login-brand-text { font-weight: 900; font-size: 22px; letter-spacing: 1px; color: #000000 !important; }
 .login-desc { color: #4a5568 !important; font-size: 15px; margin-bottom: 20px; line-height: 1.4; font-weight: 600; }
 
-/* Lato Destro (Sfondo Grigio) */
 [data-testid="stForm"] [data-testid="column"]:nth-child(2) { background-color: #f4f5f7 !important; padding: 30px 40px !important; }
 .login-right-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 15px; }
 .login-title { font-weight: bold; font-size: 18px; color: #1a2533; }
@@ -59,7 +57,6 @@ h1, h2, h3 {
 [data-testid="stForm"] input { background-color: white !important; border: 1px solid #ccc !important; color: #000 !important; font-weight: bold !important; }
 [data-testid="stForm"] [data-testid="stTextInput"] { max-width: 55% !important; }
 
-/* Bottone Rosso (Login) */
 [data-testid="stForm"] button[kind="primary"], [data-testid="stForm"] button[kind="secondary"], [data-testid="stForm"] div.stButton > button {
     background-color: #DA291C !important; color: #ffffff !important; border-radius: 6px !important; max-width: 55% !important; font-weight: bold !important; padding: 12px !important; margin-top: 10px !important; border: 1px solid #DA291C !important;
 }
@@ -67,19 +64,45 @@ h1, h2, h3 {
     background-color: #b02015 !important; color: #ffffff !important; border: 1px solid #b02015 !important; opacity: 1 !important;
 }
 
+
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
-/* Card KPI Grandi (Usate nella pagina Ordini) */
-.card-kpi { background-color: white !important; border-radius: 12px !important; padding: 25px !important; margin: 10px 0px !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.3s ease-in-out !important; }
+
+/* --- BLOCCO 1: SUGGERIMENTI EOQ (Card Bianche) --- */
+.card-kpi { 
+    background-color: white !important; 
+    border-radius: 12px !important; 
+    padding: 20px 15px !important; /* Rimpicciolito (era 25px) per allinearsi alle card blu */
+    margin: 10px 0px !important; 
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; 
+    border-top: 5px solid #DA291C !important; 
+    text-align: center !important; 
+    transition: all 0.3s ease-in-out !important; 
+}
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
 .card-kpi-green { border-top-color: #76c04f !important; }
-.kpi-titolo { color: #7b8898 !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; }
-.kpi-valore { color: #DA291C !important; font-size: 42px !important; font-weight: 900 !important; margin: 10px 0px !important; }
-.kpi-dettaglio { color: #2c3e50 !important; font-size: 13px !important; font-style: italic !important; }
 
-/* NUOVO: Card KPI Mini (MISURA MEDIA PER LA HOME PAGE) */
+.kpi-titolo { color: #7b8898 !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; }
+.kpi-valore { color: #DA291C !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } /* Rimpicciolito (era 42px) */
+.kpi-dettaglio { color: #2c3e50 !important; font-size: 12px !important; font-style: italic !important; }
+
+/* --- BLOCCO 2: DATI STORICI CONSUMO (Card Blu) --- */
+.metric-box { 
+    background-color: #003366 !important; 
+    border-radius: 12px !important; /* Allineato alle card bianche */
+    padding: 20px 15px !important;  /* Allineato alle card bianche */
+    margin: 10px 0px !important;    /* Allineato alle card bianche */
+    text-align: center !important; 
+    border-bottom: 4px solid #ffc107 !important; 
+    box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; 
+}
+.metric-title { color: #ffffff !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
+.metric-value { color: #ffc107 !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } /* Allineato a kpi-valore */
+.metric-subtitle { color: white !important; font-size: 12px !important; font-style: italic !important; }
+
+/* --- BLOCCO 3: HOME PAGE (Card Medie) --- */
 .card-kpi-mini { background-color: white !important; border-radius: 10px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.12) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.2s ease-in-out !important; }
 .card-kpi-mini:hover { transform: translateY(-4px) !important; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2) !important; }
 .card-kpi-mini-yellow { border-top-color: #f2a900 !important; }
@@ -88,19 +111,14 @@ h1, h2, h3 {
 .card-kpi-mini .kpi-valore { color: #DA291C !important; font-size: 30px !important; font-weight: 900 !important; margin: 8px 0px !important; }
 .kpi-valore-green { color: #76c04f !important; }
 
-/* Card Blu per i Consumi */
-.metric-box { background-color: #003366 !important; border-radius: 10px !important; padding: 20px !important; text-align: center !important; border-bottom: 4px solid #ffc107 !important; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2) !important; }
-.metric-title { color: #ffffff !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
-.metric-value { color: #ffc107 !important; font-size: 38px !important; font-weight: 900 !important; margin: 5px 0px !important; }
-.metric-subtitle { color: white !important; font-size: 12px !important; }
-
+/* --- INPUT E BOTTONI APP PRINCIPALE --- */
 div[data-baseweb="input"] { background-color: white !important; border-radius: 8px !important; border: 1px solid #cccccc !important; transition: 0.2s; }
 div[data-baseweb="input"]:focus-within { border: 2px solid #4285f4 !important; box-shadow: 0 0 10px rgba(66, 133, 244, 0.3) !important; }
 
-/* Bottoni Verdi (Pagina Principale) */
 .stButton > button { background-color: #76c04f !important; color: white !important; border-radius: 30px !important; padding: 12px 30px !important; font-weight: bold !important; font-size: 16px !important; width: 100% !important; transition: all 0.3s !important; border: none !important; }
 .stButton > button:hover { background-color: #5da03b !important; transform: scale(1.03) !important; color: white !important; }
 .stButton > button:active { transform: scale(0.97) !important; }
+
 
 /* =========================================
    5. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
@@ -108,7 +126,6 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #4285f4 !important; b
 [data-testid="stSidebar"] h1 { font-size: 30px !important; font-weight: 900 !important; margin-bottom: 10px !important; }
 [data-testid="stSidebar"] .stRadio label p { font-size: 18px !important; font-weight: 600 !important; padding: 6px 0px; }
 
-/* Tasto Log out Sidebar */
 [data-testid="stSidebar"] .stButton > button {
     background-color: #1a2533 !important; 
     color: #ffffff !important;            
