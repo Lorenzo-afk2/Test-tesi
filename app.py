@@ -73,7 +73,7 @@ if not st.session_state['autenticato']:
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
 catalogo_prodotti = {
-    "❄️️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
+    "❄ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
     "🥬 Fresco": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
     "📦 Secco": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
     "🧹 Operativo": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"]
@@ -145,21 +145,24 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
     st.markdown("Seleziona il prodotto e la quantità da ordinare.")
 
-    # --- 1. RIGA IN ALTO: SCELTA PRODOTTO, PREZZO (BLOCCATO) E QUANTITA' ---
-    col_rep, col_prod, col_prz, col_qta = st.columns([1.5, 1.5, 1, 1])
-    
+    # --- 1. PRIMA RIGA: REPARTO E PRODOTTO ---
+    col_rep, col_prod = st.columns(2)
     with col_rep:
-        reparto_scelto = st.selectbox("Reparto", list(catalogo_prodotti.keys()))
+        reparto_scelto = st.selectbox("1. Seleziona il Reparto", list(catalogo_prodotti.keys()))
     with col_prod:
-        prodotto_scelto = st.selectbox("Prodotto", catalogo_prodotti[reparto_scelto])
-        prezzo_base = prezzi_prodotti[prodotto_scelto]
+        prodotto_scelto = st.selectbox("2. Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
+
+    prezzo_base = prezzi_prodotti[prodotto_scelto]
+
+    # --- 2. SECONDA RIGA: PREZZO E QUANTITA' ---
+    col_prz, col_qta = st.columns(2)
     with col_prz:
         # Prezzo reso NON modificabile ("disabled=True")
         prezzo_unitario = st.number_input("Prezzo Unit. (€)", value=prezzo_base, step=1.0, disabled=True)
     with col_qta:
         quantita_ordine = st.number_input("Quantità (Scatole)", value=150, step=10)
 
-    # --- 2. SUBITO SOTTO: I DUE BOTTONI DI AZIONE ---
+    # --- 3. TERZA RIGA: I DUE BOTTONI DI AZIONE ---
     st.markdown("<br>", unsafe_allow_html=True)
     col_add, col_view = st.columns(2)
     
@@ -179,7 +182,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.button("🛒 RIEPILOGO ORDINE", on_click=toggle_carrello)
 
 
-    # --- 3. RIEPILOGO ORDINE (VISIBILE SOLO SE ATTIVATO DAL BOTTONE) ---
+    # --- RIEPILOGO ORDINE (VISIBILE SOLO SE ATTIVATO DAL BOTTONE) ---
     if st.session_state['mostra_carrello']:
         st.markdown("---")
         st.markdown("## 🛒 Distinta Ordine Attuale")
@@ -214,9 +217,9 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto e clicca su 'Aggiungi all'ordine'.")
 
 
-    # --- 4. ANALISI LOGISTICA (Sembra sempre visibile in basso) ---
+    # --- ANALISI LOGISTICA (Sempre visibile in basso) ---
     st.markdown("---")
-    st.markdown(f"### ⚙️ Supporto Decisionale: Analisi Logistica per **{prodotto_scelto}**")
+    st.markdown(f"### ⚙️️ Supporto Decisionale: Analisi Logistica per **{prodotto_scelto}**")
 
     col_in1, col_in2 = st.columns(2)
     with col_in1:
