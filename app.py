@@ -198,7 +198,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             dati_tabella = []
             for i, item in enumerate(st.session_state['carrello']):
                 dati_tabella.append({
-                    "N° Riga": i + 1,
                     "Reparto": item["Reparto"],
                     "Prodotto": item["Prodotto"],
                     "Quantità": item["Quantità"],
@@ -217,13 +216,13 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- CANCELLAZIONE SINGOLA RIGA ---
+            # --- CANCELLAZIONE SINGOLA RIGA (Etichetta aggiornata come richiesto) ---
             st.markdown("### Modifica Carrello")
-            opzioni_cancellazione = [f"Riga {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità']})" for i, item in enumerate(st.session_state['carrello'])]
+            opzioni_cancellazione = [f"Indice {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità'])})" for i, item in enumerate(st.session_state['carrello'])]
             
             col_sel_del, col_btn_del = st.columns([2, 1])
             with col_sel_del:
-                prodotto_da_cancellare = st.selectbox("Seleziona la riga da rimuovere:", opzioni_cancellazione)
+                prodotto_da_cancellare = st.selectbox("Seleziona l'indice da rimuovere:", opzioni_cancellazione)
             with col_btn_del:
                 st.markdown("<br>", unsafe_allow_html=True) 
                 if st.button("CANCELLA PRODOTTO"):
@@ -233,7 +232,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- BOTTONI FINALI (Rinominato in Cancella Tutto) ---
+            # --- BOTTONI FINALI ---
             col_btn_clear, col_btn_submit = st.columns(2)
             
             with col_btn_clear:
