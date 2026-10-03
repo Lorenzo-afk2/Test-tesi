@@ -218,7 +218,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             
             # --- CANCELLAZIONE SINGOLA RIGA (Etichetta aggiornata come richiesto) ---
             st.markdown("### Modifica Carrello")
-            opzioni_cancellazione = [f"Indice {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità'])})" for i, item in enumerate(st.session_state['carrello'])]
+            opzioni_cancellazione = [f"Indice {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità']})" for i, item in enumerate(st.session_state['carrello'])]
             
             col_sel_del, col_btn_del = st.columns([2, 1])
             with col_sel_del:
