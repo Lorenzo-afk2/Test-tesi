@@ -8,6 +8,28 @@ footer {visibility: hidden !important; display: none !important;}
 [data-testid="stHeader"] { background-color: transparent !important; }
 .stDeployButton { visibility: hidden !important; display: none !important; }
 
+/* --- FIX: FRECCIA PER RIAPRIRE LA SIDEBAR --- */
+/* Assicura che l'icona per riaprire il menu sia bianca, visibile e in primissimo piano */
+[data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    z-index: 999999 !important;
+    color: #ffffff !important;
+    transition: all 0.3s ease !important;
+    border-radius: 8px !important;
+    margin-top: 5px !important;
+    margin-left: 5px !important;
+}
+[data-testid="collapsedControl"] svg, [data-testid="stSidebarCollapsedControl"] svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+}
+/* Diventa Rossa al passaggio del mouse per essere ben visibile */
+[data-testid="collapsedControl"]:hover, [data-testid="stSidebarCollapsedControl"]:hover {
+    background-color: #DA291C !important;
+}
+/* ------------------------------------------- */
+
 /* Nasconde il simbolo della catenella vicino a tutte le scritte/titoli */
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
@@ -68,6 +90,7 @@ h1, h2, h3 {
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
+
 .card-kpi { background-color: white !important; border-radius: 12px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.3s ease-in-out !important; }
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
