@@ -15,7 +15,7 @@ if os.path.exists("style.css"):
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # =====================================================================
-# 2. SISTEMA DI AUTENTICAZIONE E MEMORIA (Carrello)
+# 2. SISTEMA DI AUTENTICAZIONE E MEMORIA (Carrello & Inventario)
 # =====================================================================
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
@@ -29,6 +29,34 @@ if 'mostra_carrello' not in st.session_state:
 def toggle_carrello():
     st.session_state['mostra_carrello'] = not st.session_state['mostra_carrello']
 
+# Inizializzazione del Database Inventario interattivo diviso per reparti
+if 'inventario' not in st.session_state:
+    st.session_state['inventario'] = {
+        "❄️ Congelato": pd.DataFrame({
+            "Prodotto": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
+            "Scatole": [45, 12, 20],
+            "Interni": [2, 4, 1],
+            "Stato": ["🟢 Regolare", "🟡 Attenzione", "🟢 Regolare"]
+        }),
+        "🥬 Fresco": pd.DataFrame({
+            "Prodotto": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
+            "Scatole": [5, 8, 15],
+            "Interni": [3, 0, 5],
+            "Stato": ["🔴 Critico", "🟡 Attenzione", "🟢 Regolare"]
+        }),
+        "📦 Secco": pd.DataFrame({
+            "Prodotto": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
+            "Scatole": [80, 40, 25],
+            "Interni": [10, 5, 2],
+            "Stato": ["🟢 Regolare", "🟢 Regolare", "🟢 Regolare"]
+        }),
+        "🧹 Operativo": pd.DataFrame({
+            "Prodotto": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"],
+            "Scatole": [2, 5, 12],
+            "Interni": [1, 0, 4],
+            "Stato": ["🔴 Critico", "🟡 Attenzione", "🟢 Regolare"]
+        })
+    }
 
 if not st.session_state['autenticato']:
     st.markdown("<br><br>", unsafe_allow_html=True)
@@ -145,7 +173,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
     st.markdown("Seleziona il prodotto e i relativi parametri, poi aggiungilo alla distinta d'ordine.")
 
-    # --- 1. PRIMA RIGA: REPARTO E PRODOTTO ---
     col_rep, col_prod = st.columns(2)
     with col_rep:
         reparto_scelto = st.selectbox("1. Seleziona il Reparto", list(catalogo_prodotti.keys()))
@@ -154,7 +181,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
 
-    # --- 2. SECONDA RIGA: LIVELLO SERVIZIO E COSTO MANTENIMENTO ---
     col_srv, col_mnt = st.columns(2)
     with col_srv:
         livello_servizio = st.selectbox("Livello di Servizio desiderato (%)", [90, 95, 99], index=1)
@@ -162,14 +188,12 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         costo_mantenimento_default = round(prezzo_base * 0.15, 2)
         costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
 
-    # --- 3. TERZA RIGA: PREZZO E QUANTITA' ---
     col_prz, col_qta = st.columns(2)
     with col_prz:
         prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
     with col_qta:
         quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
 
-    # --- 4. QUARTA RIGA: I DUE BOTTONI DI AZIONE ---
     st.markdown("<br>", unsafe_allow_html=True)
     col_add, col_view = st.columns(2)
     
@@ -189,7 +213,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.button("RIEPILOGO ORDINE", on_click=toggle_carrello)
 
 
-    # --- RIEPILOGO ORDINE (VISIBILE SOLO SE ATTIVATO DAL BOTTONE) ---
     if st.session_state['mostra_carrello']:
         st.markdown("---")
         st.markdown("## Riepilogo Ordine in Corso")
@@ -216,7 +239,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 </div>
             """, unsafe_allow_html=True)
             
-            # --- CANCELLAZIONE SINGOLA RIGA (Etichetta aggiornata come richiesto) ---
             st.markdown("### Modifica Carrello")
             opzioni_cancellazione = [f"Indice {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità']})" for i, item in enumerate(st.session_state['carrello'])]
             
@@ -232,7 +254,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # --- BOTTONI FINALI ---
             col_btn_clear, col_btn_submit = st.columns(2)
             
             with col_btn_clear:
@@ -248,7 +269,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto per iniziare.")
 
 
-    # --- CALCOLI EOQ ---
     df_storico = genera_database_simulato(prodotto_scelto)
     d_media = df_storico['Domanda_Scatole'].mean()
     sigma = df_storico['Domanda_Scatole'].std()
@@ -257,7 +277,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     z = z_scores[livello_servizio]
 
 
-    # --- ANALISI LOGISTICA (In basso per consultazione) ---
     st.markdown("---")
     st.markdown("### Dati Storici di Consumo")
 
@@ -298,18 +317,56 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
 
 # =====================================================================
-# 7. ROUTING: INVENTARIO (Pagina Segnaposto)
+# 7. ROUTING: INVENTARIO INTERATTIVO
 # =====================================================================
 elif pagina_selezionata == "📋 Inventario":
     st.title("📋 Inventario di Magazzino")
-    st.markdown("Visualizzazione giacenze attuali in tempo reale.")
-    df_inventario = pd.DataFrame({
-        "Reparto": ["Congelato", "Congelato", "Fresco", "Secco", "Operativo"],
-        "Prodotto": ["Hamburger di Manzo 4:1", "Patatine Fritte", "Pomodori a Fette", "Panini Regular", "Guanti Nitrile"],
-        "Giacenza (Scatole)": [45, 12, 5, 80, 2],
-        "Stato": ["🟢 Regolare", "🟡 Attenzione", "🔴 Critico", "🟢 Regolare", "🔴 Critico"]
-    })
-    st.dataframe(df_inventario, use_container_width=True, hide_index=True)
+    st.markdown("Visualizzazione e aggiornamento giacenze. **Fai doppio clic sulle celle per modificare Scatole, Interni o lo Stato.**")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Creiamo le 4 schede visive (Tabs) per i reparti
+    tab1, tab2, tab3, tab4 = st.tabs(["❄️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
+    
+    # Configurazione globale delle colonne (Nome bloccato, il resto editabile)
+    configurazione_colonne = {
+        "Prodotto": st.column_config.TextColumn("Nome Prodotto", disabled=True),
+        "Scatole": st.column_config.NumberColumn("Scatole", min_value=0, step=1),
+        "Interni": st.column_config.NumberColumn("Interni", min_value=0, step=1),
+        "Stato": st.column_config.SelectboxColumn("Stato", options=["🟢 Regolare", "🟡 Attenzione", "🔴 Critico"], required=True)
+    }
+
+    # Inseriamo ogni DataFrame nella rispettiva Tab usando data_editor (Tabella modificabile)
+    with tab1:
+        st.session_state['inventario']["❄️ Congelato"] = st.data_editor(
+            st.session_state['inventario']["❄️ Congelato"],
+            use_container_width=True, hide_index=True,
+            column_config=configurazione_colonne, key="edit_congelato"
+        )
+    
+    with tab2:
+        st.session_state['inventario']["🥬 Fresco"] = st.data_editor(
+            st.session_state['inventario']["🥬 Fresco"],
+            use_container_width=True, hide_index=True,
+            column_config=configurazione_colonne, key="edit_fresco"
+        )
+        
+    with tab3:
+        st.session_state['inventario']["📦 Secco"] = st.data_editor(
+            st.session_state['inventario']["📦 Secco"],
+            use_container_width=True, hide_index=True,
+            column_config=configurazione_colonne, key="edit_secco"
+        )
+        
+    with tab4:
+        st.session_state['inventario']["🧹 Operativo"] = st.data_editor(
+            st.session_state['inventario']["🧹 Operativo"],
+            use_container_width=True, hide_index=True,
+            column_config=configurazione_colonne, key="edit_operativo"
+        )
+        
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("💾 SALVA MODIFICHE INVENTARIO", type="primary"):
+        st.success("✅ Database inventario aggiornato con successo sui server centrali.")
 
 
 # =====================================================================
