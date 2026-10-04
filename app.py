@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import os
-import plotly.express as px
+import time
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
@@ -15,7 +15,7 @@ if os.path.exists("style.css"):
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # =====================================================================
-# 2. SISTEMA DI AUTENTICAZIONE E MEMORIA (Carrello & Inventario)
+# 2. SISTEMA DI AUTENTICAZIONE E MEMORIA
 # =====================================================================
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
@@ -32,17 +32,19 @@ if 'mostra_add_prodotto' not in st.session_state:
 if 'mostra_del_prodotto' not in st.session_state:
     st.session_state['mostra_del_prodotto'] = False
 
+# Memoria per l'ultimo aggiornamento POS
+if 'ultimo_aggiornamento' not in st.session_state:
+    st.session_state['ultimo_aggiornamento'] = "Mai eseguito"
+
 def toggle_carrello():
     st.session_state['mostra_carrello'] = not st.session_state['mostra_carrello']
 
 def toggle_add_prodotto():
     st.session_state['mostra_add_prodotto'] = not st.session_state['mostra_add_prodotto']
-    # Chiude l'altro pannello se aperto
     st.session_state['mostra_del_prodotto'] = False
 
 def toggle_del_prodotto():
     st.session_state['mostra_del_prodotto'] = not st.session_state['mostra_del_prodotto']
-    # Chiude l'altro pannello se aperto
     st.session_state['mostra_add_prodotto'] = False
 
 # Inizializzazione Inventario modificabile
@@ -148,9 +150,10 @@ def genera_database_simulato(nome_prodotto):
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/McDonald%27s_Golden_Arches.svg/120px-McDonald%27s_Golden_Arches.svg.png", width=60)
 st.sidebar.title("Menu Principale")
 
+# ATTENZIONE: NOME DELLA QUARTA VOCE MODIFICATO!
 pagina_selezionata = st.sidebar.radio(
     "",
-    ["🏠 Home Page", "📦 Compilazione Ordine", "📋 Inventario", "📄 File Consumazioni"]
+    ["🏠 Home Page", "📦 Compilazione Ordine", "📋 Inventario", "🔄 Sincronizzazione POS"]
 )
 
 st.sidebar.markdown("---")
@@ -338,7 +341,6 @@ elif pagina_selezionata == "📋 Inventario":
     st.title("📋 Inventario di Magazzino")
     st.markdown("Visualizza, cerca e aggiorna le giacenze attuali in tempo reale.")
     
-    # --- BARRA DI RICERCA ---
     col_search, _ = st.columns([1.5, 3])
     with col_search:
         ricerca = st.text_input("🔍 Cerca prodotto nell'inventario...")
@@ -381,7 +383,6 @@ elif pagina_selezionata == "📋 Inventario":
             
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # --- BOTTONI A FONDO PAGINA (Aggiunto "Cancella Prodotto" al centro) ---
         col_btn_add, col_btn_del, col_btn_save, _ = st.columns([1.2, 1.2, 1.5, 1.5])
         
         with col_btn_add:
@@ -394,7 +395,6 @@ elif pagina_selezionata == "📋 Inventario":
             if st.button("💾 SALVA MODIFICHE", type="primary"):
                 st.success("✅ Database inventario aggiornato con successo sui server centrali.")
 
-        # --- SCHERMATA COMPATTA DI INSERIMENTO ---
         if st.session_state.get('mostra_add_prodotto', False):
             st.markdown("---")
             col_form, _ = st.columns([2, 3])
@@ -425,27 +425,21 @@ elif pagina_selezionata == "📋 Inventario":
                         st.session_state['mostra_add_prodotto'] = False
                         st.rerun()
 
-        # --- SCHERMATA COMPATTA DI CANCELLAZIONE ---
         if st.session_state.get('mostra_del_prodotto', False):
             st.markdown("---")
             col_form_del, _ = st.columns([2, 3])
             with col_form_del:
                 st.markdown("#### 🗑️ Cancellazione Articolo")
                 rep_da_cancellare = st.selectbox("1. Seleziona Reparto", list(st.session_state['inventario'].keys()), key="del_rep")
-                
-                # Prende la lista dei prodotti nel reparto selezionato
                 lista_prodotti = st.session_state['inventario'][rep_da_cancellare]['Prodotto'].tolist()
                 
                 if len(lista_prodotti) > 0:
                     prod_da_cancellare = st.selectbox("2. Seleziona Prodotto da rimuovere", lista_prodotti, key="del_nome")
-                    
                     st.markdown("<br>", unsafe_allow_html=True)
                     if st.button("CONFERMA CANCELLAZIONE"):
-                        # Rimuove la riga selezionata dal DataFrame
                         df_temp = st.session_state['inventario'][rep_da_cancellare]
                         df_temp = df_temp[df_temp['Prodotto'] != prod_da_cancellare].reset_index(drop=True)
                         st.session_state['inventario'][rep_da_cancellare] = df_temp
-                        
                         st.success(f"✅ Prodotto rimosso dal database. Ricorda di salvare le modifiche.")
                         st.session_state['mostra_del_prodotto'] = False
                         st.rerun()
@@ -454,11 +448,61 @@ elif pagina_selezionata == "📋 Inventario":
 
 
 # =====================================================================
-# 8. ROUTING: FILE CONSUMAZIONI (Pagina Segnaposto)
+# 8. ROUTING: SINCRONIZZAZIONE POS (NUOVA PAGINA)
 # =====================================================================
-elif pagina_selezionata == "📄 File Consumazioni":
-    st.title("📄 File Consumazioni")
-    st.markdown("Carica il file esportato dalle casse (formato CSV o Excel) per aggiornare il database storico.")
-    file_caricato = st.file_uploader("Trascina qui il file", type=['csv', 'xlsx'])
-    if file_caricato:
-        st.success("✅ File caricato ed elaborato con successo. I dati sono stati aggiornati.")
+elif pagina_selezionata == "🔄 Sincronizzazione POS":
+    st.title("🔄 Sincronizzazione Dati Casse (POS)")
+    st.markdown("Modulo di integrazione per il download diretto delle transazioni di vendita dal server locale del ristorante al motore di calcolo EOQ.")
+    
+    st.markdown("---")
+    
+    # Dashboard informativa dello stato di connessione
+    col_stat1, col_stat2 = st.columns(2)
+    with col_stat1:
+        st.markdown(f"""
+            <div class="metric-box" style="border-bottom-color: #76c04f;">
+                <div class="metric-title">Stato Connessione Server POS</div>
+                <div class="metric-value" style="color: #76c04f;">ONLINE 🟢</div>
+                <div class="metric-subtitle">Connessione di rete TCP/IP stabile</div>
+            </div>
+        """, unsafe_allow_html=True)
+    with col_stat2:
+        st.markdown(f"""
+            <div class="metric-box">
+                <div class="metric-title">Ultima Sincronizzazione Rilevata</div>
+                <div class="metric-value" style="font-size: 26px;">{st.session_state['ultimo_aggiornamento']}</div>
+                <div class="metric-subtitle">Database storico locale</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
+    # Bottone di avvio Sincronizzazione
+    _, col_sync, _ = st.columns([1, 1, 1])
+    
+    with col_sync:
+        btn_sincronizza = st.button("⬇️ AVVIA SINCRONIZZAZIONE DATI VENDITA", type="primary")
+        
+    if btn_sincronizza:
+        # Simulazione visiva di caricamento/scaricamento dati
+        progress_text = "Connessione al server POS in corso..."
+        my_bar = st.progress(0, text=progress_text)
+        
+        time.sleep(1)
+        my_bar.progress(25, text="Estrazione file transazioni degli ultimi 30 giorni...")
+        
+        time.sleep(1.5)
+        my_bar.progress(60, text="Pulizia dati e aggiornamento database EOQ...")
+        
+        time.sleep(1)
+        my_bar.progress(90, text="Calcolo nuove medie di consumo...")
+        
+        time.sleep(1)
+        my_bar.progress(100, text="Sincronizzazione completata!")
+        
+        # Aggiorna la memoria dell'ultimo aggiornamento
+        ora_attuale = pd.Timestamp.now().strftime("%d/%m/%Y alle %H:%M:%S")
+        st.session_state['ultimo_aggiornamento'] = f"Oggi, {ora_attuale}"
+        
+        st.success("✅ **Completato!** Dati di vendita sincronizzati con successo. I suggerimenti dell'algoritmo nella pagina Ordine sono stati aggiornati.")
+        st.balloons()
