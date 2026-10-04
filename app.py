@@ -232,32 +232,34 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.markdown("## Riepilogo Ordine in Corso")
 
         if len(st.session_state['carrello']) > 0:
-            dati_tabella = []
+            
+            # 1. INTESTAZIONI CUSTOM DEL CARRELLO
+            c_h1, c_h2, c_h3, c_h4, c_h5, c_h6 = st.columns([0.5, 2, 3, 1.5, 1.5, 1])
+            c_h1.markdown("**N.**")
+            c_h2.markdown("**Reparto**")
+            c_h3.markdown("**Prodotto**")
+            c_h4.markdown("**Quantità**")
+            c_h5.markdown("**Prezzo Unit.**")
+            c_h6.markdown("**Azione**")
+            st.markdown("<hr style='margin-top: 5px; margin-bottom: 5px; border-color: #334155;'>", unsafe_allow_html=True)
+
+            # 2. GENERAZIONE DELLE RIGHE CON IL BOTTONE CANCELLA INTEGRATO
             for i, item in enumerate(st.session_state['carrello']):
-                dati_tabella.append({
-                    "N° Riga": i + 1,
-                    "Reparto": item["Reparto"],
-                    "Prodotto": item["Prodotto"],
-                    "Quantità": item["Quantità"],
-                    "Prezzo Unit.": item["Prezzo Unit."]
-                })
+                c1, c2, c3, c4, c5, c6 = st.columns([0.5, 2, 3, 1.5, 1.5, 1])
+                c1.markdown(f"<div style='margin-top: 10px;'>{i + 1}</div>", unsafe_allow_html=True)
+                c2.markdown(f"<div style='margin-top: 10px;'>{item['Reparto']}</div>", unsafe_allow_html=True)
+                c3.markdown(f"<div style='margin-top: 10px;'>{item['Prodotto']}</div>", unsafe_allow_html=True)
+                c4.markdown(f"<div style='margin-top: 10px;'>{item['Quantità']}</div>", unsafe_allow_html=True)
+                c5.markdown(f"<div style='margin-top: 10px;'>{item['Prezzo Unit.']}</div>", unsafe_allow_html=True)
+                
+                with c6:
+                    # Bottone per cancellare direttamente la singola riga
+                    if st.button("❌ Cancella", key=f"del_cart_row_{i}"):
+                        st.session_state['carrello'].pop(i)
+                        st.rerun()
+                st.markdown("<hr style='margin-top: 0px; margin-bottom: 5px; border-color: #1a2533;'>", unsafe_allow_html=True)
             
-            df_carrello_visivo = pd.DataFrame(dati_tabella)
-            
-            # Rimpicciolimento RIGIDO della colonna "N° Riga"
-            st.dataframe(
-                df_carrello_visivo, 
-                use_container_width=True, 
-                hide_index=True,
-                column_config={
-                    "N° Riga": st.column_config.NumberColumn(
-                        "N.",            # L'intestazione si accorcia in "N." liberando spazio
-                        width="small",   # Larghezza forzata al minimo
-                        format="%d"      # Rimuove le virgole dai numeri
-                    )
-                }
-            )
-            
+            # Calcolo Totale
             totale_complessivo = sum([item["Totale"] for item in st.session_state['carrello']])
             
             st.markdown(f"""
@@ -267,25 +269,13 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("### Modifica Carrello")
-            opzioni_cancellazione = [f"Riga {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità']})" for i, item in enumerate(st.session_state['carrello'])]
-            
-            col_sel_del, col_btn_del = st.columns([2, 1])
-            with col_sel_del:
-                prodotto_da_cancellare = st.selectbox("Seleziona la riga da rimuovere:", opzioni_cancellazione)
-            with col_btn_del:
-                st.markdown("<br>", unsafe_allow_html=True) 
-                if st.button("CANCELLA PRODOTTO"):
-                    idx = opzioni_cancellazione.index(prodotto_da_cancellare)
-                    st.session_state['carrello'].pop(idx)
-                    st.rerun()
-            
             st.markdown("<br>", unsafe_allow_html=True)
             
+            # 3. BOTTONI GLOBALI (Svuota tutto e Trasmetti)
             col_btn_clear, col_btn_submit = st.columns(2)
             
             with col_btn_clear:
-                if st.button("CANCELLA TUTTO"):
+                if st.button("CANCELLA TUTTO L'ORDINE"):
                     st.session_state['carrello'] = []
                     st.rerun() 
                     
@@ -372,7 +362,7 @@ elif pagina_selezionata == "📋 Inventario":
     
     else:
         st.markdown("**Fai doppio clic sulle celle per modificare Scatole, Interni o lo Stato.**")
-        tab1, tab2, tab3, tab4 = st.tabs(["❄️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
+        tab1, tab2, tab3, tab4 = st.tabs(["❄️️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
         
         configurazione_colonne = {
             "Prodotto": st.column_config.TextColumn("Nome Prodotto", disabled=True),
@@ -507,7 +497,7 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
         
     st.markdown("---")
 
-    st.markdown("### 🗓️ Ricerca Consumi per Singola Data")
+    st.markdown("### 🗓️️ Ricerca Consumi per Singola Data")
     st.markdown(f"Verifica quante scatole di **{prodotto_analisi}** sono state consumate in un giorno specifico.")
     
     col_data, col_btn_cerca, _ = st.columns([1, 1, 2])
@@ -529,7 +519,7 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
             scatole_vendute = risultato.iloc[0]['Domanda_Scatole']
             st.success(f"📌 Il giorno **{data_ricerca.strftime('%d/%m/%Y')}** sono state consumate **{scatole_vendute} scatole** di {prodotto_analisi}.")
         else:
-            st.error(f"⚠️️ Nessun dato disponibile per il giorno {data_ricerca.strftime('%d/%m/%Y')}.")
+            st.error(f"⚠️ Nessun dato disponibile per il giorno {data_ricerca.strftime('%d/%m/%Y')}.")
 
     st.markdown("---")
     
