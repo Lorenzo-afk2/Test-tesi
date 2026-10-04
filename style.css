@@ -2,25 +2,31 @@
    HAVIConnect - Design System Enterprise 
    ========================================= */
 
-/* 1. FIX SIDEBAR: Ripristino struttura nativa */
-/* Eliminata la regola che nascondeva l'Header e il MainMenu, che causava la scomparsa della freccia */
+/* 1. PULIZIA GENERALE E FIX SIDEBAR */
+#MainMenu { visibility: hidden !important; display: none !important; }
+footer { visibility: hidden !important; display: none !important; }
+.stDeployButton { visibility: hidden !important; display: none !important; }
 [data-testid="stHeader"] { background-color: transparent !important; }
 
-/* Coloriamo la freccia nativa di bianco per renderla visibile sullo sfondo scuro */
-[data-testid="collapsedControl"] svg {
+/* FIX FRECCIA SIDEBAR: Rendiamo il bottone nativo bianco brillante sul fondo scuro */
+[data-testid="collapsedControl"] svg,
+button[kind="header"] svg {
     fill: #ffffff !important;
     color: #ffffff !important;
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5)) !important;
 }
-[data-testid="collapsedControl"]:hover svg {
-    fill: #DA291C !important;
+[data-testid="collapsedControl"]:hover svg,
+button[kind="header"]:hover svg {
+    fill: #ffc107 !important; /* Giallo McD al passaggio del mouse */
+    color: #ffc107 !important;
 }
 
-/* Nasconde solo la catenella vicino ai titoli (in modo sicuro) */
+/* Nasconde la catenella vicino ai titoli in modo SICURO */
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 
-/* NASCONDE I 4 SIMBOLI IN ALTO A DESTRA DELLE TABELLE */
-[data-testid="stElementToolbar"], [data-testid="stToolbar"] { display: none !important; visibility: hidden !important; }
+/* NASCONDE *SOLO* I SIMBOLI DELLE TABELLE (Senza distruggere la barra superiore!) */
+[data-testid="stElementToolbar"] { display: none !important; visibility: hidden !important; }
 
 
 /* 2. SFONDO GLOBALE APP */
@@ -75,7 +81,6 @@ h1, h2, h3 {
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
-
 .card-kpi { background-color: white !important; border-radius: 12px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.3s ease-in-out !important; }
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
