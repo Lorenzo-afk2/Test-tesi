@@ -8,44 +8,22 @@ footer {visibility: hidden !important; display: none !important;}
 [data-testid="stHeader"] { background-color: transparent !important; }
 .stDeployButton { visibility: hidden !important; display: none !important; }
 
-/* --- FIX DEFINITIVO: FRECCIA PER RIAPRIRE LA SIDEBAR --- */
-/* Forziamo il bottone a essere un riquadro rosso evidente, sempre fisso in alto a sinistra */
-[data-testid="collapsedControl"], 
-[data-testid="stSidebarCollapsedControl"],
-[data-testid="stHeader"] button {
-    position: fixed !important;
-    top: 15px !important;
-    left: 15px !important;
-    background-color: #DA291C !important; /* Rosso aziendale accesissimo */
-    border: 2px solid #ffffff !important; /* Bordo bianco per staccare dallo sfondo scuro */
-    border-radius: 8px !important;
-    z-index: 999999 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    box-shadow: 0px 4px 10px rgba(0,0,0,0.5) !important;
-    padding: 6px !important;
-    transition: all 0.3s ease !important;
+/* --- FIX SIDEBAR: BOTTONE APERTURA --- */
+/* Lasciamo il bottone dove lo mette Streamlit nativamente, ma lo coloriamo di bianco luminoso */
+[data-testid="collapsedControl"] {
+    color: white !important;
+    background-color: transparent !important;
 }
-
-[data-testid="collapsedControl"] svg, 
-[data-testid="stSidebarCollapsedControl"] svg,
-[data-testid="stHeader"] button svg {
-    fill: #ffffff !important;
-    stroke: #ffffff !important;
-    color: #ffffff !important;
+[data-testid="collapsedControl"] svg {
+    fill: white !important;
+    color: white !important;
+    filter: drop-shadow(0px 0px 2px rgba(0,0,0,0.8));
 }
-
-[data-testid="collapsedControl"]:hover, 
-[data-testid="stSidebarCollapsedControl"]:hover,
-[data-testid="stHeader"] button:hover {
-    background-color: #003366 !important; /* Diventa blu notte... */
-    border-color: #ffc107 !important; /* ...con bordo giallo al passaggio del mouse */
-    transform: scale(1.05) !important;
+[data-testid="collapsedControl"]:hover svg {
+    fill: #ffc107 !important; /* Diventa giallo McDonald's al passaggio del mouse */
+    color: #ffc107 !important;
 }
-/* ------------------------------------------------------- */
+/* ------------------------------------- */
 
 /* Nasconde il simbolo della catenella vicino a tutte le scritte/titoli */
 a.header-anchor { display: none !important; visibility: hidden !important; }
@@ -54,6 +32,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 
 /* NASCONDE I 4 SIMBOLI IN ALTO A DESTRA DELLE TABELLE (Cerca, Scarica, Fullscreen) */
 [data-testid="stElementToolbar"], [data-testid="stToolbar"] { display: none !important; visibility: hidden !important; }
+
 
 /* 2. SFONDO GLOBALE APP */
 .stApp {
@@ -103,9 +82,11 @@ h1, h2, h3 {
     background-color: #b02015 !important; color: #ffffff !important; border-color: #b02015 !important; opacity: 1 !important;
 }
 
+
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
+
 .card-kpi { background-color: white !important; border-radius: 12px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.3s ease-in-out !important; }
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
@@ -134,6 +115,7 @@ h1, h2, h3 {
 div[data-baseweb="input"] { background-color: white !important; border-radius: 8px !important; border: 1px solid #cccccc !important; transition: 0.2s; }
 div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; box-shadow: 0 0 10px rgba(0, 51, 102, 0.3) !important; }
 
+
 /* --- STILE BOTTONI APP PRINCIPALE --- */
 .stButton > button { 
     background-color: #ffffff !important; color: #1a2533 !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: bold !important; font-size: 15px !important; width: 100% !important; border: 1px solid #cbd5e1 !important; transition: all 0.2s ease !important; 
@@ -150,6 +132,7 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
     background-color: #002244 !important; color: #ffffff !important; border-color: #ffffff !important; box-shadow: 0px 6px 12px rgba(0, 51, 102, 0.4) !important; 
 }
 
+
 /* =========================================
    5. STILE CARRELLO E MENU A COMPARSA (EXPANDER)
    ========================================= */
@@ -165,6 +148,7 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
 [data-testid="stTabs"] button { font-size: 16px !important; font-weight: bold !important; color: #a0aec0 !important; }
 [data-testid="stTabs"] button[aria-selected="true"] { color: #ffc107 !important; }
 [data-testid="stTabs"] div[data-baseweb="tab-highlight"] { background-color: #ffc107 !important; }
+
 
 /* =========================================
    6. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
