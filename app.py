@@ -29,11 +29,21 @@ if 'mostra_carrello' not in st.session_state:
 if 'mostra_add_prodotto' not in st.session_state:
     st.session_state['mostra_add_prodotto'] = False
 
+if 'mostra_del_prodotto' not in st.session_state:
+    st.session_state['mostra_del_prodotto'] = False
+
 def toggle_carrello():
     st.session_state['mostra_carrello'] = not st.session_state['mostra_carrello']
 
 def toggle_add_prodotto():
     st.session_state['mostra_add_prodotto'] = not st.session_state['mostra_add_prodotto']
+    # Chiude l'altro pannello se aperto
+    st.session_state['mostra_del_prodotto'] = False
+
+def toggle_del_prodotto():
+    st.session_state['mostra_del_prodotto'] = not st.session_state['mostra_del_prodotto']
+    # Chiude l'altro pannello se aperto
+    st.session_state['mostra_add_prodotto'] = False
 
 # Inizializzazione Inventario modificabile
 if 'inventario' not in st.session_state:
@@ -328,13 +338,12 @@ elif pagina_selezionata == "📋 Inventario":
     st.title("📋 Inventario di Magazzino")
     st.markdown("Visualizza, cerca e aggiorna le giacenze attuali in tempo reale.")
     
-    # --- BARRA DI RICERCA RIMPICCIOLITA ---
+    # --- BARRA DI RICERCA ---
     col_search, _ = st.columns([1.5, 3])
     with col_search:
         ricerca = st.text_input("🔍 Cerca prodotto nell'inventario...")
 
     if ricerca:
-        # Modalità Ricerca Attiva (Sola lettura per evitare conflitti di modifica)
         st.markdown("#### Risultati della Ricerca")
         trovati = 0
         for reparto, df_rep in st.session_state['inventario'].items():
@@ -351,7 +360,6 @@ elif pagina_selezionata == "📋 Inventario":
             st.info(f"Trovati {trovati} prodotti. (Cancella il testo dalla barra per tornare a modificare l'inventario).")
     
     else:
-        # Modalità Tabella Normale Modificabile
         st.markdown("**Fai doppio clic sulle celle per modificare Scatole, Interni o lo Stato.**")
         tab1, tab2, tab3, tab4 = st.tabs(["❄️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
         
@@ -373,11 +381,14 @@ elif pagina_selezionata == "📋 Inventario":
             
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # --- BOTTONI A FONDO PAGINA (RIMPICCIOLITI E AFFIANCATI) ---
-        col_btn_add, col_btn_save, _ = st.columns([1.2, 1.5, 3])
+        # --- BOTTONI A FONDO PAGINA (Aggiunto "Cancella Prodotto" al centro) ---
+        col_btn_add, col_btn_del, col_btn_save, _ = st.columns([1.2, 1.2, 1.5, 1.5])
         
         with col_btn_add:
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
+            
+        with col_btn_del:
+            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
@@ -386,23 +397,19 @@ elif pagina_selezionata == "📋 Inventario":
         # --- SCHERMATA COMPATTA DI INSERIMENTO ---
         if st.session_state.get('mostra_add_prodotto', False):
             st.markdown("---")
-            # Restringiamo lo spazio per farla apparire compatta
             col_form, _ = st.columns([2, 3])
-            
             with col_form:
                 st.markdown("#### 📝 Inserimento Nuovo Articolo")
-                nuovo_reparto = st.selectbox("Reparto di destinazione", list(st.session_state['inventario'].keys()))
-                nuovo_nome = st.text_input("Nome Prodotto")
+                nuovo_reparto = st.selectbox("Reparto di destinazione", list(st.session_state['inventario'].keys()), key="add_rep")
+                nuovo_nome = st.text_input("Nome Prodotto", key="add_nome")
                 
                 col_q1, col_q2 = st.columns(2)
                 with col_q1:
-                    nuove_scatole = st.number_input("Scatole", min_value=0, step=1)
+                    nuove_scatole = st.number_input("Scatole", min_value=0, step=1, key="add_sca")
                 with col_q2:
-                    nuovi_interni = st.number_input("Interni", min_value=0, step=1)
+                    nuovi_interni = st.number_input("Interni", min_value=0, step=1, key="add_int")
                 
                 st.markdown("<br>", unsafe_allow_html=True)
-                
-                # Il bottone usa la grafica pulita di default (Ghost) senza st.form
                 if st.button("AGGIUNGI AL DATABASE"):
                     if nuovo_nome.strip() == "":
                         st.error("Inserisci il nome del prodotto.")
@@ -411,12 +418,39 @@ elif pagina_selezionata == "📋 Inventario":
                             "Prodotto": [nuovo_nome],
                             "Scatole": [nuove_scatole],
                             "Interni": [nuovi_interni],
-                            "Stato": ["🟢 Regolare"]  # Valore calcolato automaticamente
+                            "Stato": ["🟢 Regolare"]  
                         })
                         st.session_state['inventario'][nuovo_reparto] = pd.concat([st.session_state['inventario'][nuovo_reparto], nuova_riga], ignore_index=True)
-                        st.success(f"✅ Prodotto aggiunto. Ricordati di salvare le modifiche in basso.")
+                        st.success("✅ Prodotto aggiunto. Ricorda di salvare le modifiche.")
                         st.session_state['mostra_add_prodotto'] = False
                         st.rerun()
+
+        # --- SCHERMATA COMPATTA DI CANCELLAZIONE ---
+        if st.session_state.get('mostra_del_prodotto', False):
+            st.markdown("---")
+            col_form_del, _ = st.columns([2, 3])
+            with col_form_del:
+                st.markdown("#### 🗑️ Cancellazione Articolo")
+                rep_da_cancellare = st.selectbox("1. Seleziona Reparto", list(st.session_state['inventario'].keys()), key="del_rep")
+                
+                # Prende la lista dei prodotti nel reparto selezionato
+                lista_prodotti = st.session_state['inventario'][rep_da_cancellare]['Prodotto'].tolist()
+                
+                if len(lista_prodotti) > 0:
+                    prod_da_cancellare = st.selectbox("2. Seleziona Prodotto da rimuovere", lista_prodotti, key="del_nome")
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("CONFERMA CANCELLAZIONE"):
+                        # Rimuove la riga selezionata dal DataFrame
+                        df_temp = st.session_state['inventario'][rep_da_cancellare]
+                        df_temp = df_temp[df_temp['Prodotto'] != prod_da_cancellare].reset_index(drop=True)
+                        st.session_state['inventario'][rep_da_cancellare] = df_temp
+                        
+                        st.success(f"✅ Prodotto rimosso dal database. Ricorda di salvare le modifiche.")
+                        st.session_state['mostra_del_prodotto'] = False
+                        st.rerun()
+                else:
+                    st.warning("Questo reparto è vuoto.")
 
 
 # =====================================================================
