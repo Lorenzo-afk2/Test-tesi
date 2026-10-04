@@ -235,7 +235,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             dati_tabella = []
             for i, item in enumerate(st.session_state['carrello']):
                 dati_tabella.append({
-                    "N° Riga": i + 1,  # Aggiunta la colonna N° Riga a sinistra
+                    "N° Riga": i + 1,
                     "Reparto": item["Reparto"],
                     "Prodotto": item["Prodotto"],
                     "Quantità": item["Quantità"],
@@ -243,7 +243,16 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 })
             
             df_carrello_visivo = pd.DataFrame(dati_tabella)
-            st.dataframe(df_carrello_visivo, use_container_width=True, hide_index=True)
+            
+            # Applichiamo una configurazione specifica per rimpicciolire la colonna "N° Riga"
+            st.dataframe(
+                df_carrello_visivo, 
+                use_container_width=True, 
+                hide_index=True,
+                column_config={
+                    "N° Riga": st.column_config.NumberColumn(width="small")
+                }
+            )
             
             totale_complessivo = sum([item["Totale"] for item in st.session_state['carrello']])
             
