@@ -3,31 +3,46 @@
    ========================================= */
 
 /* 1. PULIZIA GENERALE E FIX SIDEBAR */
-#MainMenu { visibility: hidden !important; display: none !important; }
-footer { visibility: hidden !important; display: none !important; }
-.stDeployButton { visibility: hidden !important; display: none !important; }
-[data-testid="stHeader"] { background-color: transparent !important; }
+#MainMenu {visibility: hidden !important;}
+footer {visibility: hidden !important;}
+.stDeployButton {visibility: hidden !important; display: none !important;}
+[data-testid="stHeader"] {background-color: transparent !important;}
 
-/* FIX FRECCIA SIDEBAR: Rendiamo il bottone nativo bianco brillante sul fondo scuro */
-[data-testid="collapsedControl"] svg,
+/* FIX DEFINITIVO E UNIVERSALE FRECCIA SIDEBAR */
+div[data-testid*="ollapsed"] svg,
+button[data-testid*="ollapsed"] svg,
 button[kind="header"] svg {
     fill: #ffffff !important;
     color: #ffffff !important;
-    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5)) !important;
+    stroke: #ffffff !important;
+    width: 28px !important;
+    height: 28px !important;
+    filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.8)) !important;
 }
-[data-testid="collapsedControl"]:hover svg,
-button[kind="header"]:hover svg {
-    fill: #ffc107 !important; /* Giallo McD al passaggio del mouse */
-    color: #ffc107 !important;
+div[data-testid*="ollapsed"] button,
+button[data-testid*="ollapsed"],
+button[kind="header"] {
+    background-color: rgba(26, 37, 51, 0.7) !important; 
+    border-radius: 8px !important;
+    margin: 5px !important;
+    padding: 5px !important;
+    visibility: visible !important;
+    display: block !important;
+    z-index: 999999 !important;
+}
+div[data-testid*="ollapsed"] button:hover,
+button[data-testid*="ollapsed"]:hover,
+button[kind="header"]:hover {
+    background-color: #DA291C !important; 
+    opacity: 1 !important;
 }
 
 /* Nasconde la catenella vicino ai titoli in modo SICURO */
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 
-/* NASCONDE *SOLO* I SIMBOLI DELLE TABELLE (Senza distruggere la barra superiore!) */
-[data-testid="stElementToolbar"] { display: none !important; visibility: hidden !important; }
-
+/* NASCONDE I 4 SIMBOLI IN ALTO A DESTRA DELLE TABELLE */
+[data-testid="stElementToolbar"], [data-testid="stToolbar"] { display: none !important; visibility: hidden !important; }
 
 /* 2. SFONDO GLOBALE APP */
 .stApp {
@@ -35,27 +50,14 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
     color: #ffffff !important;
     font-family: 'Segoe UI', Arial, sans-serif !important;
 }
-
-h1, h2, h3 {
-    color: #ffffff !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.5px;
-}
+h1, h2, h3 { color: #ffffff !important; font-weight: 800 !important; letter-spacing: 0.5px; }
 
 /* =========================================
    3. SCHERMATA DI LOGIN
    ========================================= */
 [data-testid="stForm"] {
-    background-color: #f4f6f9 !important;
-    border: 4px solid #1a2533 !important;
-    border-radius: 12px !important;
-    padding: 0px !important;
-    overflow: hidden !important;
-    margin: 60px auto !important;
-    max-width: 900px !important;
-    box-shadow: 0px 15px 30px rgba(0,0,0,0.4) !important;
+    background-color: #f4f6f9 !important; border: 4px solid #1a2533 !important; border-radius: 12px !important; padding: 0px !important; overflow: hidden !important; margin: 60px auto !important; max-width: 900px !important; box-shadow: 0px 15px 30px rgba(0,0,0,0.4) !important;
 }
-
 [data-testid="stForm"] [data-testid="stHorizontalBlock"] { gap: 0 !important; }
 [data-testid="stForm"] [data-testid="column"]:first-child { background-color: #ffffff !important; }
 .login-left-panel { padding: 40px 30px; height: 100%; min-height: 380px; display: flex; flex-direction: column; }
@@ -69,7 +71,6 @@ h1, h2, h3 {
 [data-testid="stForm"] label { color: #1a2533 !important; font-weight: bold !important; font-size: 13px !important; }
 [data-testid="stForm"] input { background-color: white !important; border: 1px solid #ccc !important; color: #000 !important; font-weight: bold !important; }
 [data-testid="stForm"] [data-testid="stTextInput"] { max-width: 55% !important; }
-
 [data-testid="stForm"] button[kind="primary"], [data-testid="stForm"] button[kind="secondary"], [data-testid="stForm"] div.stButton > button {
     background-color: #DA291C !important; color: #ffffff !important; border-radius: 6px !important; max-width: 55% !important; font-weight: bold !important; padding: 12px !important; margin-top: 10px !important; border: 1px solid #DA291C !important;
 }
@@ -88,12 +89,10 @@ h1, h2, h3 {
 .kpi-titolo { color: #7b8898 !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; }
 .kpi-valore { color: #DA291C !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } 
 .kpi-dettaglio { color: #2c3e50 !important; font-size: 12px !important; font-style: italic !important; }
-
 .metric-box { background-color: #003366 !important; border-radius: 12px !important; padding: 20px 15px !important; margin: 10px 0px !important; text-align: center !important; border-bottom: 4px solid #ffc107 !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; }
 .metric-title { color: #ffffff !important; font-size: 14px !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 1px !important; }
 .metric-value { color: #ffc107 !important; font-size: 34px !important; font-weight: 900 !important; margin: 8px 0px !important; } 
 .metric-subtitle { color: white !important; font-size: 12px !important; font-style: italic !important; }
-
 .card-kpi-mini { background-color: white !important; border-radius: 10px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.12) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.2s ease-in-out !important; }
 .card-kpi-mini:hover { transform: translateY(-4px) !important; box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2) !important; }
 .card-kpi-mini-yellow { border-top-color: #f2a900 !important; }
@@ -101,16 +100,13 @@ h1, h2, h3 {
 .card-kpi-mini .kpi-titolo { color: #7b8898 !important; font-size: 13px !important; font-weight: bold !important; text-transform: uppercase !important; }
 .card-kpi-mini .kpi-valore { color: #DA291C !important; font-size: 30px !important; font-weight: 900 !important; margin: 8px 0px !important; }
 .kpi-valore-green { color: #76c04f !important; }
-
 .contract-box { background-color: #e2e8f0 !important; border-radius: 8px !important; padding: 15px !important; border-left: 5px solid #7b8898 !important; color: #1a2533 !important; margin: 5px 0px !important; box-shadow: inset 0px 0px 5px rgba(0,0,0,0.05) !important; }
 .contract-title { font-size: 13px !important; font-weight: bold !important; text-transform: uppercase !important; color: #4a5568 !important; margin-bottom: 5px !important; }
 .contract-value { font-size: 22px !important; font-weight: 900 !important; color: #1a2533 !important; }
-
 div[data-baseweb="input"] { background-color: white !important; border-radius: 8px !important; border: 1px solid #cccccc !important; transition: 0.2s; }
 div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; box-shadow: 0 0 10px rgba(0, 51, 102, 0.3) !important; }
 
-
-/* --- STILE BOTTONI APP PRINCIPALE --- */
+/* --- STILI GLOBALI BOTTONI APP PRINCIPALE --- */
 .stButton > button { 
     background-color: #ffffff !important; color: #1a2533 !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: bold !important; font-size: 15px !important; width: 100% !important; border: 1px solid #cbd5e1 !important; transition: all 0.2s ease !important; 
 }
@@ -118,7 +114,6 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
     border-color: #003366 !important; color: #003366 !important; background-color: #f1f5f9 !important; transform: translateY(-2px) !important; box-shadow: 0px 4px 10px rgba(0, 51, 102, 0.15) !important; 
 }
 .stButton > button:active { transform: scale(0.98) !important; }
-
 .stButton > button[kind="primary"] { 
     background-color: #003366 !important; color: #ffffff !important; border: 2px solid #003366 !important; 
 }
@@ -126,29 +121,49 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
     background-color: #002244 !important; color: #ffffff !important; border-color: #ffffff !important; box-shadow: 0px 6px 12px rgba(0, 51, 102, 0.4) !important; 
 }
 
+/* =========================================
+   5. STILE SPECIALE BOTTONE "RIMUOVI" NEL CARRELLO
+   ========================================= */
+/* Nasconde il gancio HTML invisibile */
+div[data-testid="stElementContainer"]:has(.btn-cancella-hook) {
+    display: none !important;
+}
+/* Stile compatto ed elegante applicato SOLO al bottone della riga */
+div[data-testid="stElementContainer"]:has(.btn-cancella-hook) + div[data-testid="stElementContainer"] .stButton > button {
+    background-color: rgba(218, 41, 28, 0.1) !important; /* Sfondo leggermente rosato */
+    color: #DA291C !important; /* Testo rosso vivo */
+    border: 1px solid #DA291C !important;
+    padding: 4px 10px !important; /* Molto compatto */
+    font-size: 13px !important;
+    border-radius: 6px !important;
+    margin-top: 3px !important;
+    width: auto !important; /* Si adatta al testo */
+}
+div[data-testid="stElementContainer"]:has(.btn-cancella-hook) + div[data-testid="stElementContainer"] .stButton > button:hover {
+    background-color: #DA291C !important; /* Sfondo rosso pieno */
+    color: #ffffff !important; /* Testo bianco */
+    box-shadow: 0px 4px 8px rgba(218, 41, 28, 0.4) !important;
+    transform: scale(1.05) !important;
+}
 
 /* =========================================
-   5. STILE CARRELLO E MENU A COMPARSA (EXPANDER)
+   6. STILE CARRELLO E MENU A COMPARSA (EXPANDER)
    ========================================= */
 .cart-total-box {
     background-color: #1a2533 !important; border-radius: 8px !important; padding: 20px !important; border-left: 6px solid #76c04f !important; margin: 15px 0px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-shadow: 0px 5px 15px rgba(0,0,0,0.3) !important;
 }
 .cart-total-label { color: #ffffff !important; font-size: 18px !important; font-weight: bold !important; text-transform: uppercase !important;}
 .cart-total-value { color: #76c04f !important; font-size: 28px !important; font-weight: 900 !important; }
-
 [data-testid="stExpander"] { background-color: white !important; border-radius: 8px !important; border: 1px solid #cbd5e1 !important; box-shadow: 0px 4px 6px rgba(0,0,0,0.05) !important; }
 [data-testid="stExpander"] summary p { font-weight: bold !important; font-size: 16px !important; color: #1a2533 !important; }
-
 [data-testid="stTabs"] button { font-size: 16px !important; font-weight: bold !important; color: #a0aec0 !important; }
 [data-testid="stTabs"] button[aria-selected="true"] { color: #ffc107 !important; }
 [data-testid="stTabs"] div[data-baseweb="tab-highlight"] { background-color: #ffc107 !important; }
 
-
 /* =========================================
-   6. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
+   7. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
    ========================================= */
 [data-testid="stSidebar"] h1 { font-size: 30px !important; font-weight: 900 !important; margin-bottom: 10px !important; }
 [data-testid="stSidebar"] .stRadio label p { font-size: 18px !important; font-weight: 600 !important; padding: 6px 0px; }
-
 [data-testid="stSidebar"] .stButton > button { background-color: #1a2533 !important; color: #ffffff !important; border: 2px solid #DA291C !important; border-radius: 8px !important; padding: 12px 15px !important; font-size: 16px !important; font-weight: bold !important; width: 100% !important; transition: all 0.3s ease !important; box-shadow: 0px 4px 6px rgba(0,0,0,0.1) !important; }
 [data-testid="stSidebar"] .stButton > button:hover { background-color: #DA291C !important; color: #ffffff !important; border-color: #DA291C !important; transform: translateY(-2px) !important; box-shadow: 0px 6px 12px rgba(218, 41, 28, 0.3) !important; }
