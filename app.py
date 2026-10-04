@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import math
 import os
-import plotly.express as px
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
@@ -29,7 +28,7 @@ if 'mostra_carrello' not in st.session_state:
 def toggle_carrello():
     st.session_state['mostra_carrello'] = not st.session_state['mostra_carrello']
 
-# Inizializzazione del Database Inventario interattivo diviso per reparti
+# Inizializzazione Inventario modificabile
 if 'inventario' not in st.session_state:
     st.session_state['inventario'] = {
         "❄️ Congelato": pd.DataFrame({
@@ -149,7 +148,6 @@ if st.sidebar.button("🚪 Log out"):
 # =====================================================================
 if pagina_selezionata == "🏠 Home Page":
     st.title("Dashboard Direzionale | IT-07100-SASSARI")
-    
     st.markdown("#### Benvenuto nel sistema di gestione logistica. Seleziona un modulo dal menu laterale per iniziare.")
     
     st.markdown("---")
@@ -167,7 +165,7 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE E CARRELLO
+# 6. ROUTING: COMPILAZIONE ORDINE
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
@@ -276,7 +274,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
 
-
     st.markdown("---")
     st.markdown("### Dati Storici di Consumo")
 
@@ -321,52 +318,100 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 # =====================================================================
 elif pagina_selezionata == "📋 Inventario":
     st.title("📋 Inventario di Magazzino")
-    st.markdown("Visualizzazione e aggiornamento giacenze. **Fai doppio clic sulle celle per modificare Scatole, Interni o lo Stato.**")
+    st.markdown("Visualizza, cerca e aggiorna le giacenze attuali in tempo reale.")
+    
+    # --- AGGIUNGI NUOVO PRODOTTO (MENU A COMPARSA) ---
+    with st.expander("➕ Aggiungi Nuovo Prodotto all'Inventario"):
+        with st.form("form_add_prodotto"):
+            col_n1, col_n2 = st.columns(2)
+            with col_n1:
+                nuovo_reparto = st.selectbox("Reparto di destinazione", list(st.session_state['inventario'].keys()))
+                nuovo_nome = st.text_input("Nome Prodotto")
+            with col_n2:
+                col_q1, col_q2, col_s = st.columns(3)
+                with col_q1:
+                    nuove_scatole = st.number_input("Scatole", min_value=0, step=1)
+                with col_q2:
+                    nuovi_interni = st.number_input("Interni", min_value=0, step=1)
+                with col_s:
+                    nuovo_stato = st.selectbox("Stato", ["🟢 Regolare", "🟡 Attenzione", "🔴 Critico"])
+            
+            btn_aggiungi_inv = st.form_submit_button("AGGIUNGI AL DATABASE", type="primary")
+            if btn_aggiungi_inv:
+                if nuovo_nome.strip() == "":
+                    st.error("Inserisci il nome del prodotto.")
+                else:
+                    nuova_riga = pd.DataFrame({
+                        "Prodotto": [nuovo_nome],
+                        "Scatole": [nuove_scatole],
+                        "Interni": [nuovi_interni],
+                        "Stato": [nuovo_stato]
+                    })
+                    st.session_state['inventario'][nuovo_reparto] = pd.concat([st.session_state['inventario'][nuovo_reparto], nuova_riga], ignore_index=True)
+                    st.success(f"✅ Prodotto '{nuovo_nome}' aggiunto correttamente al reparto {nuovo_reparto}.")
+
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Creiamo le 4 schede visive (Tabs) per i reparti
-    tab1, tab2, tab3, tab4 = st.tabs(["❄️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
-    
-    # Configurazione globale delle colonne (Nome bloccato, il resto editabile)
-    configurazione_colonne = {
-        "Prodotto": st.column_config.TextColumn("Nome Prodotto", disabled=True),
-        "Scatole": st.column_config.NumberColumn("Scatole", min_value=0, step=1),
-        "Interni": st.column_config.NumberColumn("Interni", min_value=0, step=1),
-        "Stato": st.column_config.SelectboxColumn("Stato", options=["🟢 Regolare", "🟡 Attenzione", "🔴 Critico"], required=True)
-    }
+    # --- BARRA DI RICERCA ---
+    ricerca = st.text_input("🔍 Cerca prodotto nell'inventario...")
 
-    # Inseriamo ogni DataFrame nella rispettiva Tab usando data_editor (Tabella modificabile)
-    with tab1:
-        st.session_state['inventario']["❄️ Congelato"] = st.data_editor(
-            st.session_state['inventario']["❄️ Congelato"],
-            use_container_width=True, hide_index=True,
-            column_config=configurazione_colonne, key="edit_congelato"
-        )
+    if ricerca:
+        # SE LA RICERCA E' ATTIVA -> Mostra solo i risultati in sola lettura
+        st.markdown("#### Risultati della Ricerca")
+        trovati = 0
+        for reparto, df_rep in st.session_state['inventario'].items():
+            mask = df_rep['Prodotto'].str.contains(ricerca, case=False, na=False)
+            df_filtrato = df_rep[mask]
+            if not df_filtrato.empty:
+                trovati += len(df_filtrato)
+                st.markdown(f"**{reparto}**")
+                st.dataframe(df_filtrato, use_container_width=True, hide_index=True)
+        
+        if trovati == 0:
+            st.warning("Nessun prodotto trovato con questo nome.")
+        else:
+            st.info(f"Trovati {trovati} prodotti. (L'editor è disabilitato durante la ricerca. Cancella il testo dalla barra per tornare a modificare).")
     
-    with tab2:
-        st.session_state['inventario']["🥬 Fresco"] = st.data_editor(
-            st.session_state['inventario']["🥬 Fresco"],
-            use_container_width=True, hide_index=True,
-            column_config=configurazione_colonne, key="edit_fresco"
-        )
+    else:
+        # SE LA RICERCA E' VUOTA -> Mostra i Tab normali e modificabili
+        st.markdown("**Fai doppio clic sulle celle per modificare Scatole, Interni o lo Stato.**")
+        tab1, tab2, tab3, tab4 = st.tabs(["❄️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
         
-    with tab3:
-        st.session_state['inventario']["📦 Secco"] = st.data_editor(
-            st.session_state['inventario']["📦 Secco"],
-            use_container_width=True, hide_index=True,
-            column_config=configurazione_colonne, key="edit_secco"
-        )
-        
-    with tab4:
-        st.session_state['inventario']["🧹 Operativo"] = st.data_editor(
-            st.session_state['inventario']["🧹 Operativo"],
-            use_container_width=True, hide_index=True,
-            column_config=configurazione_colonne, key="edit_operativo"
-        )
-        
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("💾 SALVA MODIFICHE INVENTARIO", type="primary"):
-        st.success("✅ Database inventario aggiornato con successo sui server centrali.")
+        configurazione_colonne = {
+            "Prodotto": st.column_config.TextColumn("Nome Prodotto", disabled=True),
+            "Scatole": st.column_config.NumberColumn("Scatole", min_value=0, step=1),
+            "Interni": st.column_config.NumberColumn("Interni", min_value=0, step=1),
+            "Stato": st.column_config.SelectboxColumn("Stato", options=["🟢 Regolare", "🟡 Attenzione", "🔴 Critico"], required=True)
+        }
+
+        with tab1:
+            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(
+                st.session_state['inventario']["❄️ Congelato"],
+                use_container_width=True, hide_index=True,
+                column_config=configurazione_colonne, key="edit_congelato"
+            )
+        with tab2:
+            st.session_state['inventario']["🥬 Fresco"] = st.data_editor(
+                st.session_state['inventario']["🥬 Fresco"],
+                use_container_width=True, hide_index=True,
+                column_config=configurazione_colonne, key="edit_fresco"
+            )
+        with tab3:
+            st.session_state['inventario']["📦 Secco"] = st.data_editor(
+                st.session_state['inventario']["📦 Secco"],
+                use_container_width=True, hide_index=True,
+                column_config=configurazione_colonne, key="edit_secco"
+            )
+        with tab4:
+            st.session_state['inventario']["🧹 Operativo"] = st.data_editor(
+                st.session_state['inventario']["🧹 Operativo"],
+                use_container_width=True, hide_index=True,
+                column_config=configurazione_colonne, key="edit_operativo"
+            )
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("💾 SALVA MODIFICHE INVENTARIO", type="primary"):
+            st.success("✅ Database inventario aggiornato con successo sui server centrali.")
 
 
 # =====================================================================
