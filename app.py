@@ -233,7 +233,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
         if len(st.session_state['carrello']) > 0:
             
-            # 1. INTESTAZIONI CUSTOM DEL CARRELLO
             c_h1, c_h2, c_h3, c_h4, c_h5, c_h6 = st.columns([0.5, 2, 3, 1.5, 1.5, 1])
             c_h1.markdown("**N.**")
             c_h2.markdown("**Reparto**")
@@ -243,7 +242,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             c_h6.markdown("**Azione**")
             st.markdown("<hr style='margin-top: 5px; margin-bottom: 5px; border-color: #334155;'>", unsafe_allow_html=True)
 
-            # 2. GENERAZIONE DELLE RIGHE CON IL BOTTONE CANCELLA INTEGRATO
             for i, item in enumerate(st.session_state['carrello']):
                 c1, c2, c3, c4, c5, c6 = st.columns([0.5, 2, 3, 1.5, 1.5, 1])
                 c1.markdown(f"<div style='margin-top: 10px;'>{i + 1}</div>", unsafe_allow_html=True)
@@ -253,13 +251,13 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                 c5.markdown(f"<div style='margin-top: 10px;'>{item['Prezzo Unit.']}</div>", unsafe_allow_html=True)
                 
                 with c6:
-                    # Bottone per cancellare direttamente la singola riga
-                    if st.button("❌ Cancella", key=f"del_cart_row_{i}"):
+                    # Gancio HTML per catturare e rimpicciolire il bottone con il CSS!
+                    st.markdown('<span class="btn-cancella-hook"></span>', unsafe_allow_html=True)
+                    if st.button("🗑️ Rimuovi", key=f"del_cart_row_{i}"):
                         st.session_state['carrello'].pop(i)
                         st.rerun()
                 st.markdown("<hr style='margin-top: 0px; margin-bottom: 5px; border-color: #1a2533;'>", unsafe_allow_html=True)
             
-            # Calcolo Totale
             totale_complessivo = sum([item["Totale"] for item in st.session_state['carrello']])
             
             st.markdown(f"""
@@ -271,7 +269,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             
             st.markdown("<br>", unsafe_allow_html=True)
             
-            # 3. BOTTONI GLOBALI (Svuota tutto e Trasmetti)
             col_btn_clear, col_btn_submit = st.columns(2)
             
             with col_btn_clear:
@@ -362,7 +359,7 @@ elif pagina_selezionata == "📋 Inventario":
     
     else:
         st.markdown("**Fai doppio clic sulle celle per modificare Scatole, Interni o lo Stato.**")
-        tab1, tab2, tab3, tab4 = st.tabs(["❄️️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
+        tab1, tab2, tab3, tab4 = st.tabs(["❄️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
         
         configurazione_colonne = {
             "Prodotto": st.column_config.TextColumn("Nome Prodotto", disabled=True),
@@ -372,7 +369,7 @@ elif pagina_selezionata == "📋 Inventario":
         }
 
         with tab1:
-            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(st.session_state['inventario']["❄️ Congelato"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_congelato")
+            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(st.session_state['inventario']["❄️️ Congelato"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_congelato")
         with tab2:
             st.session_state['inventario']["🥬 Fresco"] = st.data_editor(st.session_state['inventario']["🥬 Fresco"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_fresco")
         with tab3:
@@ -497,7 +494,7 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
         
     st.markdown("---")
 
-    st.markdown("### 🗓️️ Ricerca Consumi per Singola Data")
+    st.markdown("### 🗓️ Ricerca Consumi per Singola Data")
     st.markdown(f"Verifica quante scatole di **{prodotto_analisi}** sono state consumate in un giorno specifico.")
     
     col_data, col_btn_cerca, _ = st.columns([1, 1, 2])
