@@ -2,15 +2,20 @@
    HAVIConnect - Design System Enterprise 
    ========================================= */
 
-/* 1. PULIZIA GENERALE E FIX TESTI */
+/* 1. PULIZIA GENERALE E FIX TESTI/TABELLE */
 #MainMenu {visibility: hidden !important; display: none !important;}
 footer {visibility: hidden !important; display: none !important;}
 [data-testid="stHeader"] { background-color: transparent !important; }
 .stDeployButton { visibility: hidden !important; display: none !important; }
 
+/* Nasconde il simbolo della catenella vicino a tutte le scritte/titoli */
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 .st-emotion-cache-1jiq4b0 { display: none !important; }
+
+/* NASCONDE I 4 SIMBOLI IN ALTO A DESTRA DELLE TABELLE (Cerca, Scarica, Fullscreen) */
+[data-testid="stElementToolbar"] { display: none !important; visibility: hidden !important; }
+[data-testid="stToolbar"] { display: none !important; visibility: hidden !important; }
 
 /* 2. SFONDO GLOBALE APP */
 .stApp {
@@ -94,7 +99,6 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
 
 /* --- STILE BOTTONI APP PRINCIPALE --- */
 
-/* Bottoni Secondari (Riepilogo, Cancella Prodotto, Cancella Tutto) */
 .stButton > button { 
     background-color: #ffffff !important; 
     color: #1a2533 !important; 
@@ -115,7 +119,6 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
 }
 .stButton > button:active { transform: scale(0.98) !important; }
 
-/* Bottoni Primari (Aggiungi all'Ordine, Trasmetti ad HAVI) - Hover pulito senza giallo */
 .stButton > button[kind="primary"] { 
     background-color: #003366 !important; 
     color: #ffffff !important; 
@@ -124,18 +127,18 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
 .stButton > button[kind="primary"]:hover { 
     background-color: #002244 !important; 
     color: #ffffff !important; 
-    border-color: #ffffff !important; /* Bordo bianco pulito ed elegante al passaggio mouse */
+    border-color: #ffffff !important; 
     box-shadow: 0px 6px 12px rgba(0, 51, 102, 0.4) !important; 
 }
 
 /* =========================================
-   5. STILE DEL CARRELLO ORDINI (Modificato con Verde ad Alto Contrasto)
+   5. STILE DEL CARRELLO ORDINI E INVENTARIO
    ========================================= */
 .cart-total-box {
     background-color: #1a2533 !important;
     border-radius: 8px !important;
     padding: 20px !important;
-    border-left: 6px solid #76c04f !important; /* Linea verde brillante ad alta visibilità */
+    border-left: 6px solid #76c04f !important; 
     margin: 15px 0px !important;
     display: flex !important;
     justify-content: space-between !important;
@@ -143,7 +146,20 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
     box-shadow: 0px 5px 15px rgba(0,0,0,0.3) !important;
 }
 .cart-total-label { color: #ffffff !important; font-size: 18px !important; font-weight: bold !important; text-transform: uppercase !important;}
-.cart-total-value { color: #76c04f !important; font-size: 28px !important; font-weight: 900 !important; } /* Prezzo in verde brillante leggibilissimo */
+.cart-total-value { color: #76c04f !important; font-size: 28px !important; font-weight: 900 !important; }
+
+/* Stile per le Tabs dell'Inventario */
+[data-testid="stTabs"] button {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #a0aec0 !important;
+}
+[data-testid="stTabs"] button[aria-selected="true"] {
+    color: #ffc107 !important;
+}
+[data-testid="stTabs"] div[data-baseweb="tab-highlight"] {
+    background-color: #ffc107 !important;
+}
 
 /* =========================================
    6. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
