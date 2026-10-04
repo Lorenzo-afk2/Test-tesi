@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import os
+import plotly.express as px
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
@@ -25,8 +26,14 @@ if 'carrello' not in st.session_state:
 if 'mostra_carrello' not in st.session_state:
     st.session_state['mostra_carrello'] = False
 
+if 'mostra_add_prodotto' not in st.session_state:
+    st.session_state['mostra_add_prodotto'] = False
+
 def toggle_carrello():
     st.session_state['mostra_carrello'] = not st.session_state['mostra_carrello']
+
+def toggle_add_prodotto():
+    st.session_state['mostra_add_prodotto'] = not st.session_state['mostra_add_prodotto']
 
 # Inizializzazione Inventario modificabile
 if 'inventario' not in st.session_state:
@@ -148,6 +155,7 @@ if st.sidebar.button("🚪 Log out"):
 # =====================================================================
 if pagina_selezionata == "🏠 Home Page":
     st.title("Dashboard Direzionale | IT-07100-SASSARI")
+    
     st.markdown("#### Benvenuto nel sistema di gestione logistica. Seleziona un modulo dal menu laterale per iniziare.")
     
     st.markdown("---")
@@ -320,43 +328,13 @@ elif pagina_selezionata == "📋 Inventario":
     st.title("📋 Inventario di Magazzino")
     st.markdown("Visualizza, cerca e aggiorna le giacenze attuali in tempo reale.")
     
-    # --- AGGIUNGI NUOVO PRODOTTO (MENU A COMPARSA) ---
-    with st.expander("➕ Aggiungi Nuovo Prodotto all'Inventario"):
-        with st.form("form_add_prodotto"):
-            col_n1, col_n2 = st.columns(2)
-            with col_n1:
-                nuovo_reparto = st.selectbox("Reparto di destinazione", list(st.session_state['inventario'].keys()))
-                nuovo_nome = st.text_input("Nome Prodotto")
-            with col_n2:
-                col_q1, col_q2, col_s = st.columns(3)
-                with col_q1:
-                    nuove_scatole = st.number_input("Scatole", min_value=0, step=1)
-                with col_q2:
-                    nuovi_interni = st.number_input("Interni", min_value=0, step=1)
-                with col_s:
-                    nuovo_stato = st.selectbox("Stato", ["🟢 Regolare", "🟡 Attenzione", "🔴 Critico"])
-            
-            btn_aggiungi_inv = st.form_submit_button("AGGIUNGI AL DATABASE", type="primary")
-            if btn_aggiungi_inv:
-                if nuovo_nome.strip() == "":
-                    st.error("Inserisci il nome del prodotto.")
-                else:
-                    nuova_riga = pd.DataFrame({
-                        "Prodotto": [nuovo_nome],
-                        "Scatole": [nuove_scatole],
-                        "Interni": [nuovi_interni],
-                        "Stato": [nuovo_stato]
-                    })
-                    st.session_state['inventario'][nuovo_reparto] = pd.concat([st.session_state['inventario'][nuovo_reparto], nuova_riga], ignore_index=True)
-                    st.success(f"✅ Prodotto '{nuovo_nome}' aggiunto correttamente al reparto {nuovo_reparto}.")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --- BARRA DI RICERCA ---
-    ricerca = st.text_input("🔍 Cerca prodotto nell'inventario...")
+    # --- BARRA DI RICERCA RIMPICCIOLITA ---
+    col_search, _ = st.columns([1.5, 3])
+    with col_search:
+        ricerca = st.text_input("🔍 Cerca prodotto nell'inventario...")
 
     if ricerca:
-        # SE LA RICERCA E' ATTIVA -> Mostra solo i risultati in sola lettura
+        # Modalità Ricerca Attiva (Sola lettura per evitare conflitti di modifica)
         st.markdown("#### Risultati della Ricerca")
         trovati = 0
         for reparto, df_rep in st.session_state['inventario'].items():
@@ -370,10 +348,10 @@ elif pagina_selezionata == "📋 Inventario":
         if trovati == 0:
             st.warning("Nessun prodotto trovato con questo nome.")
         else:
-            st.info(f"Trovati {trovati} prodotti. (L'editor è disabilitato durante la ricerca. Cancella il testo dalla barra per tornare a modificare).")
+            st.info(f"Trovati {trovati} prodotti. (Cancella il testo dalla barra per tornare a modificare l'inventario).")
     
     else:
-        # SE LA RICERCA E' VUOTA -> Mostra i Tab normali e modificabili
+        # Modalità Tabella Normale Modificabile
         st.markdown("**Fai doppio clic sulle celle per modificare Scatole, Interni o lo Stato.**")
         tab1, tab2, tab3, tab4 = st.tabs(["❄️ Congelato", "🥬 Fresco", "📦 Secco", "🧹 Operativo"])
         
@@ -385,33 +363,60 @@ elif pagina_selezionata == "📋 Inventario":
         }
 
         with tab1:
-            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(
-                st.session_state['inventario']["❄️ Congelato"],
-                use_container_width=True, hide_index=True,
-                column_config=configurazione_colonne, key="edit_congelato"
-            )
+            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(st.session_state['inventario']["❄️ Congelato"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_congelato")
         with tab2:
-            st.session_state['inventario']["🥬 Fresco"] = st.data_editor(
-                st.session_state['inventario']["🥬 Fresco"],
-                use_container_width=True, hide_index=True,
-                column_config=configurazione_colonne, key="edit_fresco"
-            )
+            st.session_state['inventario']["🥬 Fresco"] = st.data_editor(st.session_state['inventario']["🥬 Fresco"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_fresco")
         with tab3:
-            st.session_state['inventario']["📦 Secco"] = st.data_editor(
-                st.session_state['inventario']["📦 Secco"],
-                use_container_width=True, hide_index=True,
-                column_config=configurazione_colonne, key="edit_secco"
-            )
+            st.session_state['inventario']["📦 Secco"] = st.data_editor(st.session_state['inventario']["📦 Secco"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_secco")
         with tab4:
-            st.session_state['inventario']["🧹 Operativo"] = st.data_editor(
-                st.session_state['inventario']["🧹 Operativo"],
-                use_container_width=True, hide_index=True,
-                column_config=configurazione_colonne, key="edit_operativo"
-            )
+            st.session_state['inventario']["🧹 Operativo"] = st.data_editor(st.session_state['inventario']["🧹 Operativo"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_operativo")
             
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("💾 SALVA MODIFICHE INVENTARIO", type="primary"):
-            st.success("✅ Database inventario aggiornato con successo sui server centrali.")
+        
+        # --- BOTTONI A FONDO PAGINA (RIMPICCIOLITI E AFFIANCATI) ---
+        col_btn_add, col_btn_save, _ = st.columns([1.2, 1.5, 3])
+        
+        with col_btn_add:
+            st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
+            
+        with col_btn_save:
+            if st.button("💾 SALVA MODIFICHE", type="primary"):
+                st.success("✅ Database inventario aggiornato con successo sui server centrali.")
+
+        # --- SCHERMATA COMPATTA DI INSERIMENTO ---
+        if st.session_state.get('mostra_add_prodotto', False):
+            st.markdown("---")
+            # Restringiamo lo spazio per farla apparire compatta
+            col_form, _ = st.columns([2, 3])
+            
+            with col_form:
+                st.markdown("#### 📝 Inserimento Nuovo Articolo")
+                nuovo_reparto = st.selectbox("Reparto di destinazione", list(st.session_state['inventario'].keys()))
+                nuovo_nome = st.text_input("Nome Prodotto")
+                
+                col_q1, col_q2 = st.columns(2)
+                with col_q1:
+                    nuove_scatole = st.number_input("Scatole", min_value=0, step=1)
+                with col_q2:
+                    nuovi_interni = st.number_input("Interni", min_value=0, step=1)
+                
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Il bottone usa la grafica pulita di default (Ghost) senza st.form
+                if st.button("AGGIUNGI AL DATABASE"):
+                    if nuovo_nome.strip() == "":
+                        st.error("Inserisci il nome del prodotto.")
+                    else:
+                        nuova_riga = pd.DataFrame({
+                            "Prodotto": [nuovo_nome],
+                            "Scatole": [nuove_scatole],
+                            "Interni": [nuovi_interni],
+                            "Stato": ["🟢 Regolare"]  # Valore calcolato automaticamente
+                        })
+                        st.session_state['inventario'][nuovo_reparto] = pd.concat([st.session_state['inventario'][nuovo_reparto], nuova_riga], ignore_index=True)
+                        st.success(f"✅ Prodotto aggiunto. Ricordati di salvare le modifiche in basso.")
+                        st.session_state['mostra_add_prodotto'] = False
+                        st.rerun()
 
 
 # =====================================================================
