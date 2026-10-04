@@ -244,13 +244,17 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             
             df_carrello_visivo = pd.DataFrame(dati_tabella)
             
-            # Applichiamo una configurazione specifica per rimpicciolire la colonna "N° Riga"
+            # Rimpicciolimento RIGIDO della colonna "N° Riga"
             st.dataframe(
                 df_carrello_visivo, 
                 use_container_width=True, 
                 hide_index=True,
                 column_config={
-                    "N° Riga": st.column_config.NumberColumn(width="small")
+                    "N° Riga": st.column_config.NumberColumn(
+                        "N.",            # L'intestazione si accorcia in "N." liberando spazio
+                        width="small",   # Larghezza forzata al minimo
+                        format="%d"      # Rimuove le virgole dai numeri
+                    )
                 }
             )
             
@@ -525,7 +529,7 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
             scatole_vendute = risultato.iloc[0]['Domanda_Scatole']
             st.success(f"📌 Il giorno **{data_ricerca.strftime('%d/%m/%Y')}** sono state consumate **{scatole_vendute} scatole** di {prodotto_analisi}.")
         else:
-            st.error(f"⚠️ Nessun dato disponibile per il giorno {data_ricerca.strftime('%d/%m/%Y')}.")
+            st.error(f"⚠️️ Nessun dato disponibile per il giorno {data_ricerca.strftime('%d/%m/%Y')}.")
 
     st.markdown("---")
     
