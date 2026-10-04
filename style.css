@@ -3,24 +3,39 @@
    ========================================= */
 
 /* 1. PULIZIA GENERALE E FIX TESTI/TABELLE */
-#MainMenu {visibility: hidden !important; display: none !important;}
-footer {visibility: hidden !important; display: none !important;}
-.stDeployButton { visibility: hidden !important; display: none !important; }
+#MainMenu {visibility: hidden !important;}
+footer {visibility: hidden !important;}
+[data-testid="stHeader"] {background-color: transparent !important;}
+.stDeployButton {visibility: hidden !important; display: none !important;}
 
-/* --- FIX DEFINITIVO SIDEBAR --- */
-/* Rende l'header trasparente MA mantiene visibile il bottone nativo colorandolo di bianco */
-[data-testid="stHeader"] { background-color: transparent !important; }
-[data-testid="collapsedControl"] { display: flex !important; visibility: visible !important; }
-[data-testid="collapsedControl"] svg { fill: white !important; color: white !important; }
-[data-testid="collapsedControl"]:hover svg { fill: #ffc107 !important; color: #ffc107 !important; }
-/* ------------------------------ */
+/* --- FIX ASSOLUTO SIDEBAR: FORZA LA VISIBILITA' DEL BOTTONE --- */
+header[data-testid="stHeader"] button {
+    visibility: visible !important;
+    display: inline-flex !important;
+    background-color: #DA291C !important; /* Rosso McDonald's acceso */
+    border: 2px solid #ffffff !important;
+    border-radius: 8px !important;
+    opacity: 1 !important;
+    transform: scale(1.3) !important; /* Ingrandito del 30% per vederlo benissimo */
+    margin-left: 15px !important;
+    margin-top: 15px !important;
+    z-index: 999999 !important;
+}
+header[data-testid="stHeader"] button svg {
+    fill: #ffffff !important;
+    color: #ffffff !important;
+}
+header[data-testid="stHeader"] button:hover {
+    background-color: #003366 !important;
+    border-color: #ffc107 !important;
+}
+/* -------------------------------------------------------------- */
 
-/* Nasconde il simbolo della catenella vicino a tutte le scritte/titoli */
+/* Nasconde la catenella vicino ai titoli in modo SICURO (Senza classi random) */
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
-.st-emotion-cache-1jiq4b0 { display: none !important; }
 
-/* NASCONDE I 4 SIMBOLI IN ALTO A DESTRA DELLE TABELLE (Cerca, Scarica, Fullscreen) */
+/* NASCONDE I 4 SIMBOLI IN ALTO A DESTRA DELLE TABELLE */
 [data-testid="stElementToolbar"], [data-testid="stToolbar"] { display: none !important; visibility: hidden !important; }
 
 
@@ -76,6 +91,7 @@ h1, h2, h3 {
 /* =========================================
    4. DASHBOARD E INTERFACCIA PRINCIPALE
    ========================================= */
+
 .card-kpi { background-color: white !important; border-radius: 12px !important; padding: 20px 15px !important; margin: 10px 0px !important; box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2) !important; border-top: 5px solid #DA291C !important; text-align: center !important; transition: all 0.3s ease-in-out !important; }
 .card-kpi:hover { transform: translateY(-8px) !important; box-shadow: 0px 15px 25px rgba(0, 0, 0, 0.4) !important; }
 .card-kpi-yellow { border-top-color: #f2a900 !important; }
