@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import math
 import os
-import time
+import plotly.express as px
 
 # =====================================================================
 # 1. SETUP INIZIALE E COLLEGAMENTO CSS
@@ -15,7 +15,7 @@ if os.path.exists("style.css"):
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 # =====================================================================
-# 2. SISTEMA DI AUTENTICAZIONE E MEMORIA
+# 2. SISTEMA DI AUTENTICAZIONE E MEMORIA (Carrello & Inventario)
 # =====================================================================
 if 'autenticato' not in st.session_state:
     st.session_state['autenticato'] = False
@@ -31,10 +31,6 @@ if 'mostra_add_prodotto' not in st.session_state:
 
 if 'mostra_del_prodotto' not in st.session_state:
     st.session_state['mostra_del_prodotto'] = False
-
-# Memoria per l'ultimo aggiornamento POS
-if 'ultimo_aggiornamento' not in st.session_state:
-    st.session_state['ultimo_aggiornamento'] = "Mai eseguito"
 
 def toggle_carrello():
     st.session_state['mostra_carrello'] = not st.session_state['mostra_carrello']
@@ -134,7 +130,8 @@ prezzi_prodotti = {
 
 @st.cache_data 
 def genera_database_simulato(nome_prodotto):
-    date_storiche = pd.date_range(start="2021-01-01", end="2023-12-31", freq="D")
+    # Genera dati esattamente per gli ultimi 3 anni (1095 giorni) fino ad oggi
+    date_storiche = pd.date_range(end=pd.Timestamp.today(), periods=1095, freq="D")
     np.random.seed(len(nome_prodotto) * 42) 
     vendite = np.random.normal(loc=200, scale=30, size=len(date_storiche))
     df = pd.DataFrame({'Data': date_storiche, 'Domanda_Scatole': vendite})
@@ -150,10 +147,9 @@ def genera_database_simulato(nome_prodotto):
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/McDonald%27s_Golden_Arches.svg/120px-McDonald%27s_Golden_Arches.svg.png", width=60)
 st.sidebar.title("Menu Principale")
 
-# ATTENZIONE: NOME DELLA QUARTA VOCE MODIFICATO!
 pagina_selezionata = st.sidebar.radio(
     "",
-    ["🏠 Home Page", "📦 Compilazione Ordine", "📋 Inventario", "🔄 Sincronizzazione POS"]
+    ["🏠 Home Page", "📦 Compilazione Ordine", "📋 Inventario", "📊 Consumazioni Effettuate"]
 )
 
 st.sidebar.markdown("---")
@@ -186,7 +182,7 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE
+# 6. ROUTING: COMPILAZIONE ORDINE E CARRELLO
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
@@ -448,61 +444,84 @@ elif pagina_selezionata == "📋 Inventario":
 
 
 # =====================================================================
-# 8. ROUTING: SINCRONIZZAZIONE POS (NUOVA PAGINA)
+# 8. ROUTING: CONSUMAZIONI EFFETTUATE (NUOVA PAGINA REPORTING)
 # =====================================================================
-elif pagina_selezionata == "🔄 Sincronizzazione POS":
-    st.title("🔄 Sincronizzazione Dati Casse (POS)")
-    st.markdown("Modulo di integrazione per il download diretto delle transazioni di vendita dal server locale del ristorante al motore di calcolo EOQ.")
+elif pagina_selezionata == "📊 Consumazioni Effettuate":
+    st.title("📊 Storico Consumazioni Effettuate")
+    st.markdown("Analizza le vendite e i consumi elaborati dal sistema per ogni singolo prodotto. I dati mostrano l'andamento degli ultimi **3 anni** (1095 giorni).")
     
     st.markdown("---")
     
-    # Dashboard informativa dello stato di connessione
-    col_stat1, col_stat2 = st.columns(2)
-    with col_stat1:
-        st.markdown(f"""
-            <div class="metric-box" style="border-bottom-color: #76c04f;">
-                <div class="metric-title">Stato Connessione Server POS</div>
-                <div class="metric-value" style="color: #76c04f;">ONLINE 🟢</div>
-                <div class="metric-subtitle">Connessione di rete TCP/IP stabile</div>
-            </div>
-        """, unsafe_allow_html=True)
-    with col_stat2:
+    # Selezione del prodotto da analizzare
+    col_rep, col_prod = st.columns(2)
+    with col_rep:
+        reparto_analisi = st.selectbox("Seleziona il Reparto", list(catalogo_prodotti.keys()), key="rep_analisi")
+    with col_prod:
+        prodotto_analisi = st.selectbox("Seleziona il Prodotto", catalogo_prodotti[reparto_analisi], key="prod_analisi")
+
+    # Generazione dati storici per il prodotto selezionato
+    df_consumi = genera_database_simulato(prodotto_analisi)
+    
+    # Calcolo Metriche
+    totale_3_anni = df_consumi['Domanda_Scatole'].sum()
+    media_giornaliera = df_consumi['Domanda_Scatole'].mean()
+    picco_massimo = df_consumi['Domanda_Scatole'].max()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Disposizione dei KPI in alto
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
         st.markdown(f"""
             <div class="metric-box">
-                <div class="metric-title">Ultima Sincronizzazione Rilevata</div>
-                <div class="metric-value" style="font-size: 26px;">{st.session_state['ultimo_aggiornamento']}</div>
-                <div class="metric-subtitle">Database storico locale</div>
+                <div class="metric-title">Consumo Totale (3 Anni)</div>
+                <div class="metric-value">{int(totale_3_anni):,}</div>
+                <div class="metric-subtitle">Scatole smaltite</div>
+            </div>
+        """.replace(',', '.'), unsafe_allow_html=True)
+    with col_m2:
+        st.markdown(f"""
+            <div class="metric-box">
+                <div class="metric-title">Media Giornaliera</div>
+                <div class="metric-value">{int(media_giornaliera)}</div>
+                <div class="metric-subtitle">Scatole al giorno</div>
             </div>
         """, unsafe_allow_html=True)
+    with col_m3:
+        st.markdown(f"""
+            <div class="metric-box">
+                <div class="metric-title">Picco Massimo Rilevato</div>
+                <div class="metric-value">{int(picco_massimo)}</div>
+                <div class="metric-subtitle">Scatole in un singolo giorno</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    st.markdown("---")
+    st.markdown("### 📈 Andamento Temporale (Trend Vendite)")
+    
+    # Creazione grafico lineare con Plotly (Usa il rosso McDonald's #DA291C)
+    fig = px.line(df_consumi, x='Data', y='Domanda_Scatole', title=f"Trend Consumazioni: {prodotto_analisi}")
+    
+    # Rendiamo il grafico compatibile con lo sfondo scuro della nostra app
+    fig.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font_color="#ffffff",
+        margin=dict(l=20, r=20, t=40, b=20),
+        xaxis_title="Data",
+        yaxis_title="Quantità (Scatole)"
+    )
+    fig.update_traces(line_color="#DA291C", line_width=2)
+    
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("### 🗄️ Database Grezzo (Registro Giornaliero)")
     
-    # Bottone di avvio Sincronizzazione
-    _, col_sync, _ = st.columns([1, 1, 1])
+    # Mostra la tabella ordinata partendo dall'ultimo giorno (oggi)
+    df_ordinato = df_consumi[['Data', 'Domanda_Scatole']].sort_values(by="Data", ascending=False)
+    df_ordinato['Data'] = df_ordinato['Data'].dt.strftime('%d/%m/%Y')
     
-    with col_sync:
-        btn_sincronizza = st.button("⬇️ AVVIA SINCRONIZZAZIONE DATI VENDITA", type="primary")
-        
-    if btn_sincronizza:
-        # Simulazione visiva di caricamento/scaricamento dati
-        progress_text = "Connessione al server POS in corso..."
-        my_bar = st.progress(0, text=progress_text)
-        
-        time.sleep(1)
-        my_bar.progress(25, text="Estrazione file transazioni degli ultimi 30 giorni...")
-        
-        time.sleep(1.5)
-        my_bar.progress(60, text="Pulizia dati e aggiornamento database EOQ...")
-        
-        time.sleep(1)
-        my_bar.progress(90, text="Calcolo nuove medie di consumo...")
-        
-        time.sleep(1)
-        my_bar.progress(100, text="Sincronizzazione completata!")
-        
-        # Aggiorna la memoria dell'ultimo aggiornamento
-        ora_attuale = pd.Timestamp.now().strftime("%d/%m/%Y alle %H:%M:%S")
-        st.session_state['ultimo_aggiornamento'] = f"Oggi, {ora_attuale}"
-        
-        st.success("✅ **Completato!** Dati di vendita sincronizzati con successo. I suggerimenti dell'algoritmo nella pagina Ordine sono stati aggiornati.")
-        st.balloons()
+    # Tabella con espansore per non occupare troppo spazio visivo
+    with st.expander("Mostra i dati grezzi giorno per giorno"):
+        st.dataframe(df_ordinato, use_container_width=True, hide_index=True)
