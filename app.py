@@ -130,7 +130,6 @@ prezzi_prodotti = {
 
 @st.cache_data 
 def genera_database_simulato(nome_prodotto):
-    # Genera dati esattamente per gli ultimi 3 anni (1095 giorni) fino ad oggi
     date_storiche = pd.date_range(end=pd.Timestamp.today(), periods=1095, freq="D")
     np.random.seed(len(nome_prodotto) * 42) 
     vendite = np.random.normal(loc=200, scale=30, size=len(date_storiche))
@@ -182,7 +181,7 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE E CARRELLO
+# 6. ROUTING: COMPILAZIONE ORDINE
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     st.title("Compilazione Ordine")
@@ -444,15 +443,15 @@ elif pagina_selezionata == "📋 Inventario":
 
 
 # =====================================================================
-# 8. ROUTING: CONSUMAZIONI EFFETTUATE (NUOVA PAGINA REPORTING)
+# 8. ROUTING: CONSUMAZIONI EFFETTUATE (REPORTING E RICERCA PUNTUALE)
 # =====================================================================
 elif pagina_selezionata == "📊 Consumazioni Effettuate":
     st.title("📊 Storico Consumazioni Effettuate")
-    st.markdown("Analizza le vendite e i consumi elaborati dal sistema per ogni singolo prodotto. I dati mostrano l'andamento degli ultimi **3 anni** (1095 giorni).")
+    st.markdown("Analizza le vendite e i consumi elaborati dal sistema. I dati mostrano l'andamento degli ultimi **3 anni** (1095 giorni).")
     
     st.markdown("---")
     
-    # Selezione del prodotto da analizzare
+    # 1. Selezione del prodotto da analizzare
     col_rep, col_prod = st.columns(2)
     with col_rep:
         reparto_analisi = st.selectbox("Seleziona il Reparto", list(catalogo_prodotti.keys()), key="rep_analisi")
@@ -462,14 +461,14 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
     # Generazione dati storici per il prodotto selezionato
     df_consumi = genera_database_simulato(prodotto_analisi)
     
-    # Calcolo Metriche
+    # Calcolo Metriche Generali
     totale_3_anni = df_consumi['Domanda_Scatole'].sum()
     media_giornaliera = df_consumi['Domanda_Scatole'].mean()
     picco_massimo = df_consumi['Domanda_Scatole'].max()
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Disposizione dei KPI in alto
+    # 2. Disposizione dei KPI in alto
     col_m1, col_m2, col_m3 = st.columns(3)
     with col_m1:
         st.markdown(f"""
@@ -497,31 +496,54 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
         """, unsafe_allow_html=True)
         
     st.markdown("---")
+
+    # 3. MOTORE DI RICERCA GIORNALIERO (Nuova implementazione)
+    st.markdown("### 🗓️ Ricerca Consumi per Singola Data")
+    st.markdown(f"Verifica quante scatole di **{prodotto_analisi}** sono state consumate in un giorno specifico.")
+    
+    col_data, col_btn_cerca, _ = st.columns([1, 1, 2])
+    with col_data:
+        # Selettore data. Limite: da 3 anni fa a oggi
+        data_ricerca = st.date_input("Seleziona la data:", 
+                                     value=pd.Timestamp.today().date(),
+                                     min_value=(pd.Timestamp.today() - pd.Timedelta(days=1095)).date(),
+                                     max_value=pd.Timestamp.today().date())
+    
+    with col_btn_cerca:
+        st.markdown("<br>", unsafe_allow_html=True) # Allinea il bottone all'input
+        cerca_giorno = st.button("🔍 CERCA CONSUMAZIONI")
+
+    if cerca_giorno:
+        # Trasforma la data in formato datetime per fare il match col dataframe
+        data_match = pd.to_datetime(data_ricerca)
+        # Filtra il dataframe
+        risultato = df_consumi[df_consumi['Data'].dt.date == data_match.date()]
+        
+        if not risultato.empty:
+            scatole_vendute = risultato.iloc[0]['Domanda_Scatole']
+            st.success(f"📌 Il giorno **{data_ricerca.strftime('%d/%m/%Y')}** sono state consumate **{scatole_vendute} scatole** di {prodotto_analisi}.")
+        else:
+            st.error(f"⚠️ Nessun dato disponibile per il giorno {data_ricerca.strftime('%d/%m/%Y')}.")
+
+    st.markdown("---")
+    
+    # 4. Grafico e Tabella Dati Grezzi
     st.markdown("### 📈 Andamento Temporale (Trend Vendite)")
     
-    # Creazione grafico lineare con Plotly (Usa il rosso McDonald's #DA291C)
     fig = px.line(df_consumi, x='Data', y='Domanda_Scatole', title=f"Trend Consumazioni: {prodotto_analisi}")
-    
-    # Rendiamo il grafico compatibile con lo sfondo scuro della nostra app
     fig.update_layout(
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_color="#ffffff",
-        margin=dict(l=20, r=20, t=40, b=20),
-        xaxis_title="Data",
-        yaxis_title="Quantità (Scatole)"
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        font_color="#ffffff", margin=dict(l=20, r=20, t=40, b=20),
+        xaxis_title="Data", yaxis_title="Quantità (Scatole)"
     )
     fig.update_traces(line_color="#DA291C", line_width=2)
-    
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
     st.markdown("### 🗄️ Database Grezzo (Registro Giornaliero)")
     
-    # Mostra la tabella ordinata partendo dall'ultimo giorno (oggi)
     df_ordinato = df_consumi[['Data', 'Domanda_Scatole']].sort_values(by="Data", ascending=False)
     df_ordinato['Data'] = df_ordinato['Data'].dt.strftime('%d/%m/%Y')
     
-    # Tabella con espansore per non occupare troppo spazio visivo
     with st.expander("Mostra i dati grezzi giorno per giorno"):
         st.dataframe(df_ordinato, use_container_width=True, hide_index=True)
