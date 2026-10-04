@@ -235,6 +235,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             dati_tabella = []
             for i, item in enumerate(st.session_state['carrello']):
                 dati_tabella.append({
+                    "N° Riga": i + 1,  # Aggiunta la colonna N° Riga a sinistra
                     "Reparto": item["Reparto"],
                     "Prodotto": item["Prodotto"],
                     "Quantità": item["Quantità"],
@@ -254,11 +255,11 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             """, unsafe_allow_html=True)
             
             st.markdown("### Modifica Carrello")
-            opzioni_cancellazione = [f"Indice {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità']})" for i, item in enumerate(st.session_state['carrello'])]
+            opzioni_cancellazione = [f"Riga {i+1} | {item['Prodotto']} (Q.tà: {item['Quantità']})" for i, item in enumerate(st.session_state['carrello'])]
             
             col_sel_del, col_btn_del = st.columns([2, 1])
             with col_sel_del:
-                prodotto_da_cancellare = st.selectbox("Seleziona l'indice da rimuovere:", opzioni_cancellazione)
+                prodotto_da_cancellare = st.selectbox("Seleziona la riga da rimuovere:", opzioni_cancellazione)
             with col_btn_del:
                 st.markdown("<br>", unsafe_allow_html=True) 
                 if st.button("CANCELLA PRODOTTO"):
@@ -443,7 +444,7 @@ elif pagina_selezionata == "📋 Inventario":
 
 
 # =====================================================================
-# 8. ROUTING: CONSUMAZIONI EFFETTUATE (REPORTING E RICERCA PUNTUALE)
+# 8. ROUTING: CONSUMAZIONI EFFETTUATE
 # =====================================================================
 elif pagina_selezionata == "📊 Consumazioni Effettuate":
     st.title("📊 Storico Consumazioni Effettuate")
@@ -451,24 +452,20 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
     
     st.markdown("---")
     
-    # 1. Selezione del prodotto da analizzare
     col_rep, col_prod = st.columns(2)
     with col_rep:
         reparto_analisi = st.selectbox("Seleziona il Reparto", list(catalogo_prodotti.keys()), key="rep_analisi")
     with col_prod:
         prodotto_analisi = st.selectbox("Seleziona il Prodotto", catalogo_prodotti[reparto_analisi], key="prod_analisi")
 
-    # Generazione dati storici per il prodotto selezionato
     df_consumi = genera_database_simulato(prodotto_analisi)
     
-    # Calcolo Metriche Generali
     totale_3_anni = df_consumi['Domanda_Scatole'].sum()
     media_giornaliera = df_consumi['Domanda_Scatole'].mean()
     picco_massimo = df_consumi['Domanda_Scatole'].max()
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 2. Disposizione dei KPI in alto
     col_m1, col_m2, col_m3 = st.columns(3)
     with col_m1:
         st.markdown(f"""
@@ -497,26 +494,22 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
         
     st.markdown("---")
 
-    # 3. MOTORE DI RICERCA GIORNALIERO (Nuova implementazione)
     st.markdown("### 🗓️ Ricerca Consumi per Singola Data")
     st.markdown(f"Verifica quante scatole di **{prodotto_analisi}** sono state consumate in un giorno specifico.")
     
     col_data, col_btn_cerca, _ = st.columns([1, 1, 2])
     with col_data:
-        # Selettore data. Limite: da 3 anni fa a oggi
         data_ricerca = st.date_input("Seleziona la data:", 
                                      value=pd.Timestamp.today().date(),
                                      min_value=(pd.Timestamp.today() - pd.Timedelta(days=1095)).date(),
                                      max_value=pd.Timestamp.today().date())
     
     with col_btn_cerca:
-        st.markdown("<br>", unsafe_allow_html=True) # Allinea il bottone all'input
+        st.markdown("<br>", unsafe_allow_html=True) 
         cerca_giorno = st.button("🔍 CERCA CONSUMAZIONI")
 
     if cerca_giorno:
-        # Trasforma la data in formato datetime per fare il match col dataframe
         data_match = pd.to_datetime(data_ricerca)
-        # Filtra il dataframe
         risultato = df_consumi[df_consumi['Data'].dt.date == data_match.date()]
         
         if not risultato.empty:
@@ -527,7 +520,6 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
 
     st.markdown("---")
     
-    # 4. Grafico e Tabella Dati Grezzi
     st.markdown("### 📈 Andamento Temporale (Trend Vendite)")
     
     fig = px.line(df_consumi, x='Data', y='Domanda_Scatole', title=f"Trend Consumazioni: {prodotto_analisi}")
