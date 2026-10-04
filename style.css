@@ -2,36 +2,20 @@
    HAVIConnect - Design System Enterprise 
    ========================================= */
 
-/* 1. PULIZIA GENERALE E FIX TESTI/TABELLE */
-#MainMenu {visibility: hidden !important;}
-footer {visibility: hidden !important;}
-[data-testid="stHeader"] {background-color: transparent !important;}
-.stDeployButton {visibility: hidden !important; display: none !important;}
+/* 1. FIX SIDEBAR: Ripristino struttura nativa */
+/* Eliminata la regola che nascondeva l'Header e il MainMenu, che causava la scomparsa della freccia */
+[data-testid="stHeader"] { background-color: transparent !important; }
 
-/* --- FIX ASSOLUTO SIDEBAR: FORZA LA VISIBILITA' DEL BOTTONE --- */
-header[data-testid="stHeader"] button {
-    visibility: visible !important;
-    display: inline-flex !important;
-    background-color: #DA291C !important; /* Rosso McDonald's acceso */
-    border: 2px solid #ffffff !important;
-    border-radius: 8px !important;
-    opacity: 1 !important;
-    transform: scale(1.3) !important; /* Ingrandito del 30% per vederlo benissimo */
-    margin-left: 15px !important;
-    margin-top: 15px !important;
-    z-index: 999999 !important;
-}
-header[data-testid="stHeader"] button svg {
+/* Coloriamo la freccia nativa di bianco per renderla visibile sullo sfondo scuro */
+[data-testid="collapsedControl"] svg {
     fill: #ffffff !important;
     color: #ffffff !important;
 }
-header[data-testid="stHeader"] button:hover {
-    background-color: #003366 !important;
-    border-color: #ffc107 !important;
+[data-testid="collapsedControl"]:hover svg {
+    fill: #DA291C !important;
 }
-/* -------------------------------------------------------------- */
 
-/* Nasconde la catenella vicino ai titoli in modo SICURO (Senza classi random) */
+/* Nasconde solo la catenella vicino ai titoli (in modo sicuro) */
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 
