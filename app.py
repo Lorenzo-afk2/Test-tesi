@@ -112,7 +112,7 @@ if not st.session_state['autenticato']:
 
 
 # =====================================================================
-# 3. DATI IN MEMORIA, PREZZI E RANGE DI CONSUMO
+# 3. DATI IN MEMORIA E RANGE DI CONSUMO
 # =====================================================================
 catalogo_prodotti = {
     "❄️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
@@ -128,28 +128,11 @@ prezzi_prodotti = {
     "Filtri friggitrici": 60.00, "Guanti in nitrile": 15.00, "Sgrassatore Superfici": 55.00, "Sgrassatore Pavimenti": 60.00, "Stracci Banda Rossa": 30.00
 }
 
-# Range di consumi giornalieri (Minimo, Massimo) per scatole
 range_consumi = {
-    "Hamburger di Manzo 4:1": (2, 10),
-    "Hamburger di Manzo 7:1": (11, 20),
-    "Hamburger di manzo 10:1": (21, 30),
-    "Mc Fries": (15, 25),
-    "McNugget di pollo": (10, 15),
-    "Insalata Iceberg": (9, 14),
-    "Insalata Batavia": (8, 13),
-    "Mela": (4, 11),
-    "Ananas": (3, 10),
-    "Actimel": (6, 12),
-    "Buste Manici": (1, 3),
-    "Buste A": (2, 4),
-    "Bicchieri 0.5": (3, 5),
-    "Bicchieri 0.4": (4, 6),
-    "Box Happy Meal": (5, 10),
-    "Filtri friggitrici": (5, 10),
-    "Guanti in nitrile": (2, 5),
-    "Sgrassatore Superfici": (1, 7),
-    "Sgrassatore Pavimenti": (2, 6),
-    "Stracci Banda Rossa": (3, 8)
+    "Hamburger di Manzo 4:1": (2, 10), "Hamburger di Manzo 7:1": (11, 20), "Hamburger di manzo 10:1": (21, 30), "Mc Fries": (15, 25), "McNugget di pollo": (10, 15),
+    "Insalata Iceberg": (9, 14), "Insalata Batavia": (8, 13), "Mela": (4, 11), "Ananas": (3, 10), "Actimel": (6, 12),
+    "Buste Manici": (1, 3), "Buste A": (2, 4), "Bicchieri 0.5": (3, 5), "Bicchieri 0.4": (4, 6), "Box Happy Meal": (5, 10),
+    "Filtri friggitrici": (5, 10), "Guanti in nitrile": (2, 5), "Sgrassatore Superfici": (1, 7), "Sgrassatore Pavimenti": (2, 6), "Stracci Banda Rossa": (3, 8)
 }
 
 @st.cache_data 
@@ -197,12 +180,9 @@ if st.sidebar.button("🚪 Log out"):
 # =====================================================================
 if pagina_selezionata == "🏠 Home Page":
     st.title("Dashboard Direzionale | IT-07100-SASSARI")
-    
     st.markdown("#### Benvenuto nel sistema di gestione logistica. Seleziona un modulo dal menu laterale per iniziare.")
-    
     st.markdown("---")
     st.subheader("Stato Operativo Ristorante")
-    
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.markdown("""<div class="card-kpi-mini"><div class="kpi-titolo">Stato Rifornimenti</div><div class="kpi-valore kpi-valore-green">REGOLARE</div></div>""", unsafe_allow_html=True)
@@ -215,67 +195,85 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE (NUOVO LAYOUT UX)
+# 6. ROUTING: COMPILAZIONE ORDINE (STATISTICA E VARIABILITÀ)
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     
     # === 1. SELEZIONE PRODOTTO ===
     st.markdown("### 1. Seleziona l'articolo da analizzare e ordinare")
     
-    col_rep, col_prod = st.columns(2)
+    col_rep, col_prod, col_srv = st.columns([1.5, 1.5, 1])
     with col_rep:
         reparto_scelto = st.selectbox("Seleziona il Reparto", list(catalogo_prodotti.keys()))
     with col_prod:
         prodotto_scelto = st.selectbox("Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
+    with col_srv:
+        livello_servizio = st.selectbox("Livello Servizio desiderato (%)", [90, 95, 99], index=1)
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
 
-    # Parametri Algoritmo affiancati alla selezione
-    col_srv, col_mnt = st.columns(2)
-    with col_srv:
-        livello_servizio = st.selectbox("Livello di Servizio desiderato (%)", [90, 95, 99], index=1)
-    with col_mnt:
-        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
-        costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
+    # === 2. MOTORE STATISTICO E LOGISTICO (Variabilità e Periodicità) ===
+    
+    # Lettura giacenza reale dall'inventario
+    df_inventario_reparto = st.session_state['inventario'][reparto_scelto]
+    riga_prodotto = df_inventario_reparto[df_inventario_reparto['Prodotto'] == prodotto_scelto]
+    giacenza_attuale = int(riga_prodotto['Scatole'].values[0]) if not riga_prodotto.empty else 0
 
-    # === 2. MOTORE DI CALCOLO EOQ E MEDIE ===
+    # Statistica Avanzata sui Consumi
     df_storico = genera_database_simulato(prodotto_scelto)
     d_media = df_storico['Domanda_Scatole'].mean()
-    sigma = df_storico['Domanda_Scatole'].std()
+    sigma = df_storico['Domanda_Scatole'].std() # Deviazione standard (Variabilità)
     D_annua = d_media * 365
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
-    lead_time = 3
-    costo_ordine = 50.0
 
+    # Parametri operativi (2 Ordini a Settimana)
+    T = 3.5  # Giorni tra un ordine e l'altro
+    L = 3.0  # Lead Time di consegna
+    costo_ordine = 50.0 
+    costo_mantenimento = round(prezzo_base * 0.15, 2)
+
+    # EOQ Classico (Lotto teorico se non ci fossero vincoli di tempo)
     eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
-    scorta_sicurezza = z * sigma * math.sqrt(lead_time)
-    rop = (d_media * lead_time) + scorta_sicurezza
 
-    # === 3. VISUALIZZAZIONE SUGGERIMENTI EOQ (ORA SONO 4 COLONNE) ===
+    # Scorta di Sicurezza calcolata sulla variabilità (σ) nel periodo a rischio (T+L)
+    scorta_sicurezza = z * sigma * math.sqrt(T + L)
+    
+    # Livello di Riordino ROP (Soglia d'allarme)
+    rop = (d_media * L) + scorta_sicurezza
+    
+    # Target Stock (Massimo livello da raggiungere per coprire i prossimi 3.5 giorni)
+    target_stock = (d_media * (T + L)) + scorta_sicurezza
+    
+    # Calcolo dell'ordine matematico reale (Da Ordinare = Target - Giacenza)
+    ordine_suggerito = math.ceil(target_stock - giacenza_attuale)
+    if ordine_suggerito < 0: 
+        ordine_suggerito = 0
+
+
+    # === 3. VISUALIZZAZIONE SUGGERIMENTI STATISTICI (4 COLONNE) ===
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Ordine consigliato tramite Modello EOQ")
+    st.subheader("Ordine consigliato tramite Modello Logistico")
     
     col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
     with col_kpi1:
-        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Media Giornaliera</div><div class="kpi-valore">{int(d_media)}</div><div class="kpi-dettaglio">Scatole stimate/giorno</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Media Giornaliera (d)</div><div class="kpi-valore">{int(d_media)}</div><div class="kpi-dettaglio">Variabilità σ: <b>{sigma:.1f}</b></div></div>""", unsafe_allow_html=True)
     with col_kpi2:
-        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Quantità Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole ottimali</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Modello EOQ</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Lotto economico teorico</div></div>""", unsafe_allow_html=True)
     with col_kpi3:
-        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Soglia di Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Ordinare a questa giacenza</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Livello di Riordino</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Punto critico d'ordine</div></div>""", unsafe_allow_html=True)
     with col_kpi4:
-        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta di Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura imprevisti</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta Sicurezza</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Gestione imprevisti (Z-Score)</div></div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # === 4. COMPILAZIONE ORDINE (INVERTITI QUANTITÀ E PREZZO) ===
+    # === 4. COMPILAZIONE ORDINE (AUTOCOMPILATA E INVERTITA) ===
     st.title("Compilazione Ordine")
-    st.markdown("Verifica i suggerimenti dell'algoritmo e inserisci la quantità definitiva da aggiungere alla distinta d'ordine.")
+    st.markdown(f"In base alla giacenza attuale in cella (**{giacenza_attuale} scatole**), il sistema calcola la differenza per raggiungere il Target Stock.")
 
     col_qta, col_prz = st.columns(2)
     with col_qta:
-        # La casella si pre-compila con il valore dell'EOQ arrotondato
-        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=1, value=int(eoq), step=1)
+        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=0, value=ordine_suggerito, step=1)
     with col_prz:
         prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
 
@@ -284,15 +282,18 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     
     with col_add:
         if st.button("AGGIUNGI ALL'ORDINE", type="primary"):
-            st.session_state['carrello'].append({
-                "Reparto": reparto_scelto,
-                "Prodotto": prodotto_scelto,
-                "Quantità": quantita_ordine,
-                "Prezzo Unit.": f"{prezzo_unitario:.2f} €",
-                "Totale": quantita_ordine * prezzo_unitario
-            })
-            st.session_state['mostra_carrello'] = True
-            st.success(f"Dato acquisito. {quantita_ordine} scatole di '{prodotto_scelto}' in distinta.")
+            if quantita_ordine > 0:
+                st.session_state['carrello'].append({
+                    "Reparto": reparto_scelto,
+                    "Prodotto": prodotto_scelto,
+                    "Quantità": quantita_ordine,
+                    "Prezzo Unit.": f"{prezzo_unitario:.2f} €",
+                    "Totale": quantita_ordine * prezzo_unitario
+                })
+                st.session_state['mostra_carrello'] = True
+                st.success(f"Dato acquisito. {quantita_ordine} scatole di '{prodotto_scelto}' in distinta.")
+            else:
+                st.warning("La quantità da ordinare è 0. Impossibile aggiungere al carrello.")
             
     with col_view:
         st.button("RIEPILOGO ORDINE E CARRELLO", on_click=toggle_carrello)
@@ -354,14 +355,20 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         else:
             st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto per iniziare.")
 
-    # === 6. VECCHI DATI E STATISTICHE (NASCOSTI IN UN EXPANDER) ===
+    # === 6. PARAMETRI AVANZATI (EXPANDER) ===
     st.markdown("---")
-    with st.expander("📊 Vedi Parametri Contrattuali (Bloccati)"):
-        col_c1, col_c2 = st.columns(2)
+    with st.expander("📊 Vedi Parametri Logistici e Contrattuali"):
+        st.markdown(f"**Modello applicato:** Revisione Periodica a tempo fisso. Il sistema calcola il Target Stock necessario per non subire rotture di stock durante i giorni di Lead Time sommati ai giorni di attesa prima del prossimo scarico, bilanciando la variabilità statistica della domanda (**σ**).")
+        col_c1, col_c2, col_c3 = st.columns(3)
         with col_c1:
-            st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Consegna [L]</div><div class="contract-value">🔒 {lead_time} Giorni</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"**Frequenza Ordini (T):** {T} giorni (2/sett)")
+            st.markdown(f"**Lead Time (L):** {int(L)} giorni")
         with col_c2:
-            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Fisso di Consegna/Ordine [Co]</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"**Costo Singolo Ordine:** {costo_ordine} €")
+            st.markdown(f"**Costo Mantenimento:** {costo_mantenimento:.2f} €")
+        with col_c3:
+            st.markdown(f"**Livello di Servizio:** {livello_servizio}%")
+            st.markdown(f"**Z-Score applicato:** {z}")
 
 
 # =====================================================================
@@ -419,7 +426,7 @@ elif pagina_selezionata == "📋 Inventario":
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
             
         with col_btn_del:
-            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
+            st.button("🗑️️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
