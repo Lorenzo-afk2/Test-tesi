@@ -6,27 +6,24 @@
 #MainMenu {visibility: hidden !important;}
 footer {visibility: hidden !important;}
 .stDeployButton {visibility: hidden !important; display: none !important;}
-
-/* Mantiene l'header in primissimo piano ma trasparente */
 [data-testid="stHeader"] {
     background-color: transparent !important;
     z-index: 99999 !important;
 }
 
 /* --- FIX DEFINITIVO E INCANCELLABILE FRECCIA SIDEBAR --- */
-/* Targettizziamo entrambi i nomi in codice usati da Streamlit nelle varie versioni */
 [data-testid="collapsedControl"],
 [data-testid="stSidebarCollapsedControl"] {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-    background-color: #DA291C !important; /* Rosso McDonald's */
+    background-color: #DA291C !important;
     border: 2px solid white !important;
     border-radius: 8px !important;
-    position: fixed !important; /* Lo fissa fisicamente sullo schermo */
+    position: fixed !important;
     top: 15px !important;
     left: 15px !important;
-    z-index: 9999999 !important; /* Nessun elemento potrà mai coprirlo */
+    z-index: 9999999 !important;
     width: 45px !important;
     height: 45px !important;
     align-items: center !important;
@@ -35,7 +32,6 @@ footer {visibility: hidden !important;}
     transition: all 0.3s ease !important;
 }
 
-/* Effetto Hover (Passaggio del mouse) */
 [data-testid="collapsedControl"]:hover,
 [data-testid="stSidebarCollapsedControl"]:hover {
     background-color: #003366 !important;
@@ -43,7 +39,6 @@ footer {visibility: hidden !important;}
     transform: scale(1.1) !important;
 }
 
-/* Colora e ingrandisce l'icona interna della freccia */
 [data-testid="collapsedControl"] svg,
 [data-testid="stSidebarCollapsedControl"] svg {
     fill: #ffffff !important;
@@ -58,7 +53,7 @@ footer {visibility: hidden !important;}
 a.header-anchor { display: none !important; visibility: hidden !important; }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
 
-/* NASCONDE *SOLO* I SIMBOLI IN ALTO A DESTRA DELLE TABELLE (Senza distruggere l'header!) */
+/* NASCONDE I SIMBOLI IN ALTO A DESTRA DELLE TABELLE */
 [data-testid="stElementToolbar"] { display: none !important; visibility: hidden !important; }
 
 
@@ -69,6 +64,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a { display: none !important; }
     font-family: 'Segoe UI', Arial, sans-serif !important;
 }
 h1, h2, h3 { color: #ffffff !important; font-weight: 800 !important; letter-spacing: 0.5px; }
+
 
 /* =========================================
    3. SCHERMATA DI LOGIN
@@ -142,4 +138,33 @@ div[data-baseweb="input"]:focus-within { border: 2px solid #003366 !important; b
 /* =========================================
    5. STILE SPECIALE BOTTONE "RIMUOVI" NEL CARRELLO
    ========================================= */
-div[data-testid="stElementContainer"]:has(.btn-cancella-hook) { display: none !
+div[data-testid="stElementContainer"]:has(.btn-cancella-hook) { display: none !important; }
+div[data-testid="stElementContainer"]:has(.btn-cancella-hook) + div[data-testid="stElementContainer"] .stButton > button {
+    background-color: rgba(218, 41, 28, 0.1) !important; color: #DA291C !important; border: 1px solid #DA291C !important; padding: 4px 10px !important; font-size: 13px !important; border-radius: 6px !important; margin-top: 3px !important; width: auto !important; 
+}
+div[data-testid="stElementContainer"]:has(.btn-cancella-hook) + div[data-testid="stElementContainer"] .stButton > button:hover {
+    background-color: #DA291C !important; color: #ffffff !important; box-shadow: 0px 4px 8px rgba(218, 41, 28, 0.4) !important; transform: scale(1.05) !important;
+}
+
+/* =========================================
+   6. STILE CARRELLO E MENU A COMPARSA (EXPANDER)
+   ========================================= */
+.cart-total-box {
+    background-color: #1a2533 !important; border-radius: 8px !important; padding: 20px !important; border-left: 6px solid #76c04f !important; margin: 15px 0px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; box-shadow: 0px 5px 15px rgba(0,0,0,0.3) !important;
+}
+.cart-total-label { color: #ffffff !important; font-size: 18px !important; font-weight: bold !important; text-transform: uppercase !important;}
+.cart-total-value { color: #76c04f !important; font-size: 28px !important; font-weight: 900 !important; }
+[data-testid="stExpander"] { background-color: white !important; border-radius: 8px !important; border: 1px solid #cbd5e1 !important; box-shadow: 0px 4px 6px rgba(0,0,0,0.05) !important; }
+[data-testid="stExpander"] summary p { font-weight: bold !important; font-size: 16px !important; color: #1a2533 !important; }
+[data-testid="stTabs"] button { font-size: 16px !important; font-weight: bold !important; color: #a0aec0 !important; }
+[data-testid="stTabs"] button[aria-selected="true"] { color: #ffc107 !important; }
+[data-testid="stTabs"] div[data-baseweb="tab-highlight"] { background-color: #ffc107 !important; }
+
+/* =========================================
+   7. STILE SIDEBAR (NAVIGAZIONE E LOGOUT)
+   ========================================= */
+[data-testid="stSidebar"] h1 { font-size: 30px !important; font-weight: 900 !important; margin-bottom: 10px !important; }
+[data-testid="stSidebar"] .stRadio label p { font-size: 18px !important; font-weight: 600 !important; padding: 6px 0px; }
+
+[data-testid="stSidebar"] .stButton > button { background-color: #1a2533 !important; color: #ffffff !important; border: 2px solid #DA291C !important; border-radius: 8px !important; padding: 12px 15px !important; font-size: 16px !important; font-weight: bold !important; width: 100% !important; transition: all 0.3s ease !important; box-shadow: 0px 4px 6px rgba(0,0,0,0.1) !important; }
+[data-testid="stSidebar"] .stButton > button:hover { background-color: #DA291C !important; color: #ffffff !important; border-color: #DA291C !important; transform: translateY(-2px) !important; box-shadow: 0px 6px 12px rgba(218, 41, 28, 0.3) !important; }
