@@ -199,6 +199,25 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     
+    st.title("Compilazione Ordine")
+    
+    # Parametri operativi (2 Ordini a Settimana) definiti in cima
+    T = 3.5  # Giorni tra un ordine e l'altro
+    L = 3.0  # Lead Time di consegna
+    costo_ordine = 50.0 
+
+    # === 0. PARAMETRI CONTRATTUALI BLOCCATI (EXPANDER IN CIMA) ===
+    with st.expander("📊 Parametri di Rifornimento (Bloccati da Direzione)", expanded=False):
+        col_c1, col_c2, col_c3 = st.columns(3)
+        with col_c1:
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Frequenza Consegne (T)</div><div class="contract-value">🔒 {T} gg (2/sett)</div></div>""", unsafe_allow_html=True)
+        with col_c2:
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time (L)</div><div class="contract-value">🔒 {int(L)} Giorni</div></div>""", unsafe_allow_html=True)
+        with col_c3:
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Singolo Ordine</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+
     # === 1. SELEZIONE PRODOTTO ===
     st.markdown("### 1. Seleziona l'articolo da analizzare e ordinare")
     
@@ -227,10 +246,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
 
-    # Parametri operativi (2 Ordini a Settimana)
-    T = 3.5  # Giorni tra un ordine e l'altro
-    L = 3.0  # Lead Time di consegna
-    costo_ordine = 50.0 
     costo_mantenimento = round(prezzo_base * 0.15, 2)
 
     # EOQ Classico (Lotto teorico se non ci fossero vincoli di tempo)
@@ -268,7 +283,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     st.markdown("---")
 
     # === 4. COMPILAZIONE ORDINE (AUTOCOMPILATA E INVERTITA) ===
-    st.title("Compilazione Ordine")
+    st.markdown("### 2. Conferma Dati e Inserisci nel Carrello")
     st.markdown(f"In base alla giacenza attuale in cella (**{giacenza_attuale} scatole**), il sistema calcola la differenza per raggiungere il Target Stock.")
 
     col_qta, col_prz = st.columns(2)
@@ -355,21 +370,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         else:
             st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto per iniziare.")
 
-    # === 6. PARAMETRI AVANZATI (EXPANDER) ===
-    st.markdown("---")
-    with st.expander("📊 Vedi Parametri Logistici e Contrattuali"):
-        st.markdown(f"**Modello applicato:** Revisione Periodica a tempo fisso. Il sistema calcola il Target Stock necessario per non subire rotture di stock durante i giorni di Lead Time sommati ai giorni di attesa prima del prossimo scarico, bilanciando la variabilità statistica della domanda (**σ**).")
-        col_c1, col_c2, col_c3 = st.columns(3)
-        with col_c1:
-            st.markdown(f"**Frequenza Ordini (T):** {T} giorni (2/sett)")
-            st.markdown(f"**Lead Time (L):** {int(L)} giorni")
-        with col_c2:
-            st.markdown(f"**Costo Singolo Ordine:** {costo_ordine} €")
-            st.markdown(f"**Costo Mantenimento:** {costo_mantenimento:.2f} €")
-        with col_c3:
-            st.markdown(f"**Livello di Servizio:** {livello_servizio}%")
-            st.markdown(f"**Z-Score applicato:** {z}")
-
 
 # =====================================================================
 # 7. ROUTING: INVENTARIO INTERATTIVO
@@ -426,7 +426,7 @@ elif pagina_selezionata == "📋 Inventario":
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
             
         with col_btn_del:
-            st.button("🗑️️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
+            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
