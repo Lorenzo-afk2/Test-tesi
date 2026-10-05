@@ -226,7 +226,8 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     with col_prz:
         prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
     with col_qta:
-        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", value=150, step=10)
+        # ---- MODIFICA QUI: partenza da 1, scatti di 1 cartone alla volta ----
+        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=1, value=1, step=1)
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_add, col_view = st.columns(2)
@@ -404,7 +405,7 @@ elif pagina_selezionata == "📋 Inventario":
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
             
         with col_btn_del:
-            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
+            st.button("🗑️️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
