@@ -128,7 +128,7 @@ prezzi_prodotti = {
     "Filtri friggitrici": 60.00, "Guanti in nitrile": 15.00, "Sgrassatore Superfici": 55.00, "Sgrassatore Pavimenti": 60.00, "Stracci Banda Rossa": 30.00
 }
 
-# NUOVO: Range di consumi giornalieri (Minimo, Massimo) per scatole
+# Range di consumi giornalieri (Minimo, Massimo) per scatole
 range_consumi = {
     "Hamburger di Manzo 4:1": (2, 10),
     "Hamburger di Manzo 7:1": (11, 20),
@@ -499,22 +499,14 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
 
     df_consumi = genera_database_simulato(prodotto_analisi)
     
-    totale_3_anni = df_consumi['Domanda_Scatole'].sum()
     media_giornaliera = df_consumi['Domanda_Scatole'].mean()
     picco_massimo = df_consumi['Domanda_Scatole'].max()
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    col_m1, col_m2, col_m3 = st.columns(3)
+    # MODIFICA: Solo 2 colonne centrali invece di 3
+    col_m1, col_m2 = st.columns(2)
     with col_m1:
-        st.markdown(f"""
-            <div class="metric-box">
-                <div class="metric-title">Consumo Totale (3 Anni)</div>
-                <div class="metric-value">{int(totale_3_anni):,}</div>
-                <div class="metric-subtitle">Scatole smaltite</div>
-            </div>
-        """.replace(',', '.'), unsafe_allow_html=True)
-    with col_m2:
         st.markdown(f"""
             <div class="metric-box">
                 <div class="metric-title">Media Giornaliera</div>
@@ -522,7 +514,7 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
                 <div class="metric-subtitle">Scatole al giorno</div>
             </div>
         """, unsafe_allow_html=True)
-    with col_m3:
+    with col_m2:
         st.markdown(f"""
             <div class="metric-box">
                 <div class="metric-title">Picco Massimo Rilevato</div>
