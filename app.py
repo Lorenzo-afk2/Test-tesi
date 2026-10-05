@@ -43,32 +43,32 @@ def toggle_del_prodotto():
     st.session_state['mostra_del_prodotto'] = not st.session_state['mostra_del_prodotto']
     st.session_state['mostra_add_prodotto'] = False
 
-# Inizializzazione Inventario modificabile
+# Inizializzazione Inventario modificabile con i 5 prodotti per reparto
 if 'inventario' not in st.session_state:
     st.session_state['inventario'] = {
         "❄️ Congelato": pd.DataFrame({
-            "Prodotto": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
-            "Scatole": [45, 12, 20],
-            "Interni": [2, 4, 1],
-            "Stato": ["🟢 Regolare", "🟡 Attenzione", "🟢 Regolare"]
+            "Prodotto": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
+            "Scatole": [45, 32, 50, 80, 20],
+            "Interni": [2, 1, 0, 4, 1],
+            "Stato": ["🟢 Regolare", "🟢 Regolare", "🟢 Regolare", "🟢 Regolare", "🟡 Attenzione"]
         }),
         "🥬 Fresco": pd.DataFrame({
-            "Prodotto": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
-            "Scatole": [5, 8, 15],
-            "Interni": [3, 0, 5],
-            "Stato": ["🔴 Critico", "🟡 Attenzione", "🟢 Regolare"]
+            "Prodotto": ["Insalata Iceberg", "Insalata Batavia", "Mela", "Ananas", "Actimel"],
+            "Scatole": [5, 8, 12, 4, 10],
+            "Interni": [3, 0, 2, 1, 0],
+            "Stato": ["🔴 Critico", "🟡 Attenzione", "🟢 Regolare", "🔴 Critico", "🟢 Regolare"]
         }),
         "📦 Secco": pd.DataFrame({
-            "Prodotto": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
-            "Scatole": [80, 40, 25],
-            "Interni": [10, 5, 2],
-            "Stato": ["🟢 Regolare", "🟢 Regolare", "🟢 Regolare"]
+            "Prodotto": ["Buste Manici", "Buste A", "Bicchieri 0.5", "Bicchieri 0.4", "Box Happy Meal"],
+            "Scatole": [80, 120, 25, 40, 60],
+            "Interni": [10, 5, 2, 8, 1],
+            "Stato": ["🟢 Regolare", "🟢 Regolare", "🟢 Regolare", "🟢 Regolare", "🟢 Regolare"]
         }),
         "🧹 Operativo": pd.DataFrame({
-            "Prodotto": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"],
-            "Scatole": [2, 5, 12],
-            "Interni": [1, 0, 4],
-            "Stato": ["🔴 Critico", "🟡 Attenzione", "🟢 Regolare"]
+            "Prodotto": ["Filtri friggitrici", "guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"],
+            "Scatole": [8, 2, 5, 4, 15],
+            "Interni": [0, 1, 0, 1, 2],
+            "Stato": ["🟢 Regolare", "🔴 Critico", "🟡 Attenzione", "🟡 Attenzione", "🟢 Regolare"]
         })
     }
 
@@ -114,18 +114,20 @@ if not st.session_state['autenticato']:
 # =====================================================================
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
+# Catalogo aggiornato a 5 prodotti per reparto
 catalogo_prodotti = {
-    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Patatine Fritte (Scatole)", "McNuggets di Pollo"],
-    "🥬 Fresco": ["Insalata Iceberg (Buste)", "Pomodori a Fette", "Latte Intero (Brik)"],
-    "📦 Secco": ["Panini Regular (Casse)", "Bicchieri Carta (Manicotti)", "Salsa Ketchup (Scatole)"],
-    "🧹 Operativo": ["Guanti in Nitrile (Box)", "Sgrassatore Superfici (Taniche)", "Rotoli Asciugatutto"]
+    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
+    "🥬 Fresco": ["Insalata Iceberg", "Insalata Batavia", "Mela", "Ananas", "Actimel"],
+    "📦 Secco": ["Buste Manici", "Buste A", "Bicchieri 0.5", "Bicchieri 0.4", "Box Happy Meal"],
+    "🧹 Operativo": ["Filtri friggitrici", "guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"]
 }
 
+# Listino prezzi aggiornato con i nuovi prodotti per evitare errori nei calcoli
 prezzi_prodotti = {
-    "Hamburger di Manzo 4:1": 45.00, "Patatine Fritte (Scatole)": 28.50, "McNuggets di Pollo": 55.00,
-    "Insalata Iceberg (Buste)": 15.00, "Pomodori a Fette": 18.00, "Latte Intero (Brik)": 12.00,
-    "Panini Regular (Casse)": 22.00, "Bicchieri Carta (Manicotti)": 35.00, "Salsa Ketchup (Scatole)": 20.00,
-    "Guanti in Nitrile (Box)": 8.50, "Sgrassatore Superfici (Taniche)": 14.00, "Rotoli Asciugatutto": 19.00
+    "Hamburger di Manzo 4:1": 45.00, "Hamburger di Manzo 7:1": 50.00, "Hamburger di manzo 10:1": 55.00, "Mc Fries": 28.50, "McNugget di pollo": 55.00,
+    "Insalata Iceberg": 15.00, "Insalata Batavia": 16.50, "Mela": 12.00, "Ananas": 22.00, "Actimel": 18.00,
+    "Buste Manici": 25.00, "Buste A": 20.00, "Bicchieri 0.5": 35.00, "Bicchieri 0.4": 30.00, "Box Happy Meal": 40.00,
+    "Filtri friggitrici": 60.00, "guanti in nitrile": 8.50, "Sgrassatore Superfici": 14.00, "Sgrassatore Pavimenti": 12.00, "Stracci Banda Rossa": 10.00
 }
 
 @st.cache_data 
@@ -493,7 +495,7 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
         
     st.markdown("---")
 
-    st.markdown("### 🗓️ Ricerca Consumi per Singola Data")
+    st.markdown("### 🗓️️ Ricerca Consumi per Singola Data")
     st.markdown(f"Verifica quante scatole di **{prodotto_analisi}** sono state consumate in un giorno specifico.")
     
     col_data, col_btn_cerca, _ = st.columns([1, 1, 2])
@@ -515,7 +517,7 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
             scatole_vendute = risultato.iloc[0]['Domanda_Scatole']
             st.success(f"📌 Il giorno **{data_ricerca.strftime('%d/%m/%Y')}** sono state consumate **{scatole_vendute} scatole** di {prodotto_analisi}.")
         else:
-            st.error(f"⚠️️ Nessun dato disponibile per il giorno {data_ricerca.strftime('%d/%m/%Y')}.")
+            st.error(f"⚠️ Nessun dato disponibile per il giorno {data_ricerca.strftime('%d/%m/%Y')}.")
 
     st.markdown("---")
     
@@ -533,11 +535,8 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
     st.markdown("---")
     st.markdown("### 🗄️ Database Grezzo (Registro Giornaliero)")
     
-    # -------------------------------------------------------------
-    # ATTENZIONE: QUESTE SONO LE RIGHE CHE NON DEVONO ESSERE SALTATE
     df_ordinato = df_consumi[['Data', 'Domanda_Scatole']].sort_values(by="Data", ascending=False)
     df_ordinato['Data'] = df_ordinato['Data'].dt.strftime('%d/%m/%Y')
-    # -------------------------------------------------------------
     
     with st.expander("Mostra i dati grezzi giorno per giorno"):
         st.dataframe(df_ordinato, use_container_width=True, hide_index=True)
