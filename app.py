@@ -426,6 +426,118 @@ elif pagina_selezionata == "📋 Inventario":
             with col_form_del:
                 st.markdown("#### 🗑️ Cancellazione Articolo")
                 rep_da_cancellare = st.selectbox("1. Seleziona Reparto", list(st.session_state['inventario'].keys()), key="del_rep")
-                lista_prodotti = st.session_state['inventario'][rep_da_cancellare]['Prodotto'].tolist
+                lista_prodotti = st.session_state['inventario'][rep_da_cancellare]['Prodotto'].tolist()
+                
+                if len(lista_prodotti) > 0:
+                    prod_da_cancellare = st.selectbox("2. Seleziona Prodotto da rimuovere", lista_prodotti, key="del_nome")
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("CONFERMA CANCELLAZIONE"):
+                        df_temp = st.session_state['inventario'][rep_da_cancellare]
+                        df_temp = df_temp[df_temp['Prodotto'] != prod_da_cancellare].reset_index(drop=True)
+                        st.session_state['inventario'][rep_da_cancellare] = df_temp
+                        st.success(f"✅ Prodotto rimosso dal database. Ricorda di salvare le modifiche.")
+                        st.session_state['mostra_del_prodotto'] = False
+                        st.rerun()
+                else:
+                    st.warning("Questo reparto è vuoto.")
+
+
+# =====================================================================
+# 8. ROUTING: CONSUMAZIONI EFFETTUATE
+# =====================================================================
+elif pagina_selezionata == "📊 Consumazioni Effettuate":
+    st.title("📊 Storico Consumazioni Effettuate")
+    st.markdown("Analizza le vendite e i consumi elaborati dal sistema. I dati mostrano l'andamento degli ultimi **3 anni** (1095 giorni).")
+    
+    st.markdown("---")
+    
+    col_rep, col_prod = st.columns(2)
+    with col_rep:
+        reparto_analisi = st.selectbox("Seleziona il Reparto", list(catalogo_prodotti.keys()), key="rep_analisi")
+    with col_prod:
+        prodotto_analisi = st.selectbox("Seleziona il Prodotto", catalogo_prodotti[reparto_analisi], key="prod_analisi")
+
+    df_consumi = genera_database_simulato(prodotto_analisi)
+    
+    totale_3_anni = df_consumi['Domanda_Scatole'].sum()
+    media_giornaliera = df_consumi['Domanda_Scatole'].mean()
+    picco_massimo = df_consumi['Domanda_Scatole'].max()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
+        st.markdown(f"""
+            <div class="metric-box">
+                <div class="metric-title">Consumo Totale (3 Anni)</div>
+                <div class="metric-value">{int(totale_3_anni):,}</div>
+                <div class="metric-subtitle">Scatole smaltite</div>
+            </div>
+        """.replace(',', '.'), unsafe_allow_html=True)
+    with col_m2:
+        st.markdown(f"""
+            <div class="metric-box">
+                <div class="metric-title">Media Giornaliera</div>
+                <div class="metric-value">{int(media_giornaliera)}</div>
+                <div class="metric-subtitle">Scatole al giorno</div>
+            </div>
+        """, unsafe_allow_html=True)
+    with col_m3:
+        st.markdown(f"""
+            <div class="metric-box">
+                <div class="metric-title">Picco Massimo Rilevato</div>
+                <div class="metric-value">{int(picco_massimo)}</div>
+                <div class="metric-subtitle">Scatole in un singolo giorno</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    st.markdown("---")
+
+    st.markdown("### 🗓️ Ricerca Consumi per Singola Data")
+    st.markdown(f"Verifica quante scatole di **{prodotto_analisi}** sono state consumate in un giorno specifico.")
+    
+    col_data, col_btn_cerca, _ = st.columns([1, 1, 2])
+    with col_data:
+        data_ricerca = st.date_input("Seleziona la data:", 
+                                     value=pd.Timestamp.today().date(),
+                                     min_value=(pd.Timestamp.today() - pd.Timedelta(days=1095)).date(),
+                                     max_value=pd.Timestamp.today().date())
+    
+    with col_btn_cerca:
+        st.markdown("<br>", unsafe_allow_html=True) 
+        cerca_giorno = st.button("🔍 CERCA CONSUMAZIONI")
+
+    if cerca_giorno:
+        data_match = pd.to_datetime(data_ricerca)
+        risultato = df_consumi[df_consumi['Data'].dt.date == data_match.date()]
+        
+        if not risultato.empty:
+            scatole_vendute = risultato.iloc[0]['Domanda_Scatole']
+            st.success(f"📌 Il giorno **{data_ricerca.strftime('%d/%m/%Y')}** sono state consumate **{scatole_vendute} scatole** di {prodotto_analisi}.")
+        else:
+            st.error(f"⚠️️ Nessun dato disponibile per il giorno {data_ricerca.strftime('%d/%m/%Y')}.")
+
+    st.markdown("---")
+    
+    st.markdown("### 📈 Andamento Temporale (Trend Vendite)")
+    
+    fig = px.line(df_consumi, x='Data', y='Domanda_Scatole', title=f"Trend Consumazioni: {prodotto_analisi}")
+    fig.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        font_color="#ffffff", margin=dict(l=20, r=20, t=40, b=20),
+        xaxis_title="Data", yaxis_title="Quantità (Scatole)"
+    )
+    fig.update_traces(line_color="#DA291C", line_width=2)
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("---")
+    st.markdown("### 🗄️ Database Grezzo (Registro Giornaliero)")
+    
+    # -------------------------------------------------------------
+    # ATTENZIONE: QUESTE SONO LE RIGHE CHE NON DEVONO ESSERE SALTATE
+    df_ordinato = df_consumi[['Data', 'Domanda_Scatole']].sort_values(by="Data", ascending=False)
+    df_ordinato['Data'] = df_ordinato['Data'].dt.strftime('%d/%m/%Y')
+    # -------------------------------------------------------------
+    
     with st.expander("Mostra i dati grezzi giorno per giorno"):
         st.dataframe(df_ordinato, use_container_width=True, hide_index=True)
