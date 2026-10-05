@@ -157,10 +157,7 @@ def genera_database_simulato(nome_prodotto):
     date_storiche = pd.date_range(end=pd.Timestamp.today(), periods=1095, freq="D")
     np.random.seed(len(nome_prodotto) * 42) 
     
-    # Preleva il range specifico per il prodotto (default 10-20 se ci sono errori)
     min_val, max_val = range_consumi.get(nome_prodotto, (10, 20))
-    
-    # Crea una curva di distribuzione verosimile all'interno del range
     media = (min_val + max_val) / 2
     deviazione = (max_val - min_val) / 4 
     
@@ -168,11 +165,8 @@ def genera_database_simulato(nome_prodotto):
     
     df = pd.DataFrame({'Data': date_storiche, 'Domanda_Scatole': vendite})
     df['Giorno_Num'] = df['Data'].dt.dayofweek 
-    
-    # Simula il picco del weekend (aumento del 40%)
     df.loc[df['Giorno_Num'] >= 5, 'Domanda_Scatole'] *= 1.40 
     
-    # Arrotonda e fissa i limiti per non sforare mai i valori minimi stabiliti
     df['Domanda_Scatole'] = np.maximum(df['Domanda_Scatole'].round(), min_val).astype(int)
     max_weekend = int(max_val * 1.40)
     df['Domanda_Scatole'] = np.minimum(df['Domanda_Scatole'], max_weekend)
@@ -221,20 +215,22 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE
+# 6. ROUTING: COMPILAZIONE ORDINE (NUOVO LAYOUT UX)
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
-    st.title("Compilazione Ordine")
-    st.markdown("Seleziona il prodotto e i relativi parametri, poi aggiungilo alla distinta d'ordine.")
-
+    
+    # === 1. SELEZIONE PRODOTTO (In cima per pilotare tutto) ===
+    st.markdown("### 1. Seleziona l'articolo da analizzare e ordinare")
+    
     col_rep, col_prod = st.columns(2)
     with col_rep:
-        reparto_scelto = st.selectbox("1. Seleziona il Reparto", list(catalogo_prodotti.keys()))
+        reparto_scelto = st.selectbox("Seleziona il Reparto", list(catalogo_prodotti.keys()))
     with col_prod:
-        prodotto_scelto = st.selectbox("2. Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
+        prodotto_scelto = st.selectbox("Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
 
+    # Parametri Algoritmo affiancati alla selezione
     col_srv, col_mnt = st.columns(2)
     with col_srv:
         livello_servizio = st.selectbox("Livello di Servizio desiderato (%)", [90, 95, 99], index=1)
@@ -242,11 +238,43 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         costo_mantenimento_default = round(prezzo_base * 0.15, 2)
         costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
 
+    # === 2. MOTORE DI CALCOLO EOQ ===
+    df_storico = genera_database_simulato(prodotto_scelto)
+    d_media = df_storico['Domanda_Scatole'].mean()
+    sigma = df_storico['Domanda_Scatole'].std()
+    D_annua = d_media * 365
+    z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
+    z = z_scores[livello_servizio]
+    lead_time = 3
+    costo_ordine = 50.0
+
+    eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
+    scorta_sicurezza = z * sigma * math.sqrt(lead_time)
+    rop = (d_media * lead_time) + scorta_sicurezza
+
+    # === 3. VISUALIZZAZIONE SUGGERIMENTI EOQ ===
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.subheader("Ordine consigliato tramite Modello EOQ")
+    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
+    with col_kpi1:
+        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Quantità Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole per minimizzare i costi</div></div>""", unsafe_allow_html=True)
+    with col_kpi2:
+        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Soglia di Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Ordinare a questa giacenza</div></div>""", unsafe_allow_html=True)
+    with col_kpi3:
+        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta di Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura imprevisti</div></div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # === 4. COMPILAZIONE ORDINE ===
+    st.title("Compilazione Ordine")
+    st.markdown("Verifica i suggerimenti dell'algoritmo e inserisci la quantità definitiva da aggiungere alla distinta d'ordine.")
+
     col_prz, col_qta = st.columns(2)
     with col_prz:
         prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
     with col_qta:
-        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=1, value=1, step=1)
+        # CHICCA: La casella si pre-compila con il valore dell'EOQ arrotondato!
+        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=1, value=int(eoq), step=1)
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_add, col_view = st.columns(2)
@@ -264,9 +292,10 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             st.success(f"Dato acquisito. {quantita_ordine} scatole di '{prodotto_scelto}' in distinta.")
             
     with col_view:
-        st.button("RIEPILOGO ORDINE", on_click=toggle_carrello)
+        st.button("RIEPILOGO ORDINE E CARRELLO", on_click=toggle_carrello)
 
 
+    # === 5. CARRELLO E GESTIONE ===
     if st.session_state['mostra_carrello']:
         st.markdown("---")
         st.markdown("## Riepilogo Ordine in Corso")
@@ -322,51 +351,20 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         else:
             st.info("La distinta d'ordine è attualmente vuota. Seleziona i prodotti in alto per iniziare.")
 
-
-    df_storico = genera_database_simulato(prodotto_scelto)
-    d_media = df_storico['Domanda_Scatole'].mean()
-    sigma = df_storico['Domanda_Scatole'].std()
-    D_annua = d_media * 365
-    z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
-    z = z_scores[livello_servizio]
-
+    # === 6. VECCHI DATI E STATISTICHE (NASCOSTI IN UN EXPANDER) ===
     st.markdown("---")
-    st.markdown("### Dati Storici di Consumo")
+    with st.expander("📊 Vedi Parametri Contrattuali e Statistiche Storiche del prodotto"):
+        col_dem1, col_dem2 = st.columns(2)
+        with col_dem1:
+            st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Media Giornaliera (d)</div><div class="metric-value">{int(d_media)}</div><div class="metric-subtitle">Scatole al giorno</div></div>""", unsafe_allow_html=True)
+        with col_dem2:
+            st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Annua Stimata (D)</div><div class="metric-value">{int(D_annua):,}</div><div class="metric-subtitle">Scatole totali previste</div></div>""".replace(',', '.'), unsafe_allow_html=True) 
 
-    col_dem1, col_dem2 = st.columns(2)
-    with col_dem1:
-        st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Media Giornaliera (d)</div><div class="metric-value">{int(d_media)}</div><div class="metric-subtitle">Scatole al giorno</div></div>""", unsafe_allow_html=True)
-    with col_dem2:
-        st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Annua Stimata (D)</div><div class="metric-value">{int(D_annua):,}</div><div class="metric-subtitle">Scatole totali previste</div></div>""".replace(',', '.'), unsafe_allow_html=True) 
-
-    st.markdown("---")
-    st.subheader("Suggerimenti dell'Algoritmo (Modello EOQ)")
-    spazio_algoritmo = st.container() 
-
-    st.markdown("---")
-    st.markdown("### Parametri Contrattuali (Bloccati da Corporate)")
-    
-    lead_time = 3
-    costo_ordine = 50.0
-
-    col_c1, col_c2 = st.columns(2)
-    with col_c1:
-        st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Consegna [L]</div><div class="contract-value">🔒 {lead_time} Giorni</div></div>""", unsafe_allow_html=True)
-    with col_c2:
-        st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Fisso di Consegna/Ordine [Co]</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
-
-    eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
-    scorta_sicurezza = z * sigma * math.sqrt(lead_time)
-    rop = (d_media * lead_time) + scorta_sicurezza
-
-    with spazio_algoritmo:
-        col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
-        with col_kpi1:
-            st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Quantità Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole per minimizzare i costi</div></div>""", unsafe_allow_html=True)
-        with col_kpi2:
-            st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Soglia di Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Ordinare a questa giacenza</div></div>""", unsafe_allow_html=True)
-        with col_kpi3:
-            st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta di Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura imprevisti</div></div>""", unsafe_allow_html=True)
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Consegna [L]</div><div class="contract-value">🔒 {lead_time} Giorni</div></div>""", unsafe_allow_html=True)
+        with col_c2:
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Fisso di Consegna/Ordine [Co]</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
 
 
 # =====================================================================
@@ -408,7 +406,7 @@ elif pagina_selezionata == "📋 Inventario":
         }
 
         with tab1:
-            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(st.session_state['inventario']["❄️ Congelato"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_congelato")
+            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(st.session_state['inventario']["❄️️ Congelato"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_congelato")
         with tab2:
             st.session_state['inventario']["🥬 Fresco"] = st.data_editor(st.session_state['inventario']["🥬 Fresco"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_fresco")
         with tab3:
@@ -504,7 +502,6 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # MODIFICA: Solo 2 colonne centrali invece di 3
     col_m1, col_m2 = st.columns(2)
     with col_m1:
         st.markdown(f"""
