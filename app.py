@@ -112,7 +112,7 @@ if not st.session_state['autenticato']:
 
 
 # =====================================================================
-# 3. DATI IN MEMORIA E FUNZIONI
+# 3. DATI IN MEMORIA, PREZZI E RANGE DI CONSUMO
 # =====================================================================
 catalogo_prodotti = {
     "❄️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
@@ -121,42 +121,62 @@ catalogo_prodotti = {
     "🧹 Operativo": ["Filtri friggitrici", "Guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"]
 }
 
-# NUOVO LISTINO PREZZI AGGIORNATO (Valori Fissi)
 prezzi_prodotti = {
-    "Hamburger di Manzo 4:1": 70.00, 
-    "Hamburger di Manzo 7:1": 80.00, 
-    "Hamburger di manzo 10:1": 85.00, 
-    "Mc Fries": 50.00, 
-    "McNugget di pollo": 55.00,
-    
-    "Insalata Iceberg": 30.00, 
-    "Insalata Batavia": 35.00, 
-    "Mela": 15.00, 
-    "Ananas": 6.00, 
-    "Actimel": 20.00,
-    
-    "Buste Manici": 45.00, 
-    "Buste A": 35.00, 
-    "Bicchieri 0.5": 55.00, 
-    "Bicchieri 0.4": 50.00, 
-    "Box Happy Meal": 70.00,
-    
-    "Filtri friggitrici": 60.00, 
-    "Guanti in nitrile": 15.00, 
-    "Sgrassatore Superfici": 55.00, 
-    "Sgrassatore Pavimenti": 60.00, 
-    "Stracci Banda Rossa": 30.00
+    "Hamburger di Manzo 4:1": 70.00, "Hamburger di Manzo 7:1": 80.00, "Hamburger di manzo 10:1": 85.00, "Mc Fries": 50.00, "McNugget di pollo": 55.00,
+    "Insalata Iceberg": 30.00, "Insalata Batavia": 35.00, "Mela": 15.00, "Ananas": 6.00, "Actimel": 20.00,
+    "Buste Manici": 45.00, "Buste A": 35.00, "Bicchieri 0.5": 55.00, "Bicchieri 0.4": 50.00, "Box Happy Meal": 70.00,
+    "Filtri friggitrici": 60.00, "Guanti in nitrile": 15.00, "Sgrassatore Superfici": 55.00, "Sgrassatore Pavimenti": 60.00, "Stracci Banda Rossa": 30.00
+}
+
+# NUOVO: Range di consumi giornalieri (Minimo, Massimo) per scatole
+range_consumi = {
+    "Hamburger di Manzo 4:1": (2, 10),
+    "Hamburger di Manzo 7:1": (11, 20),
+    "Hamburger di manzo 10:1": (21, 30),
+    "Mc Fries": (15, 25),
+    "McNugget di pollo": (10, 15),
+    "Insalata Iceberg": (9, 14),
+    "Insalata Batavia": (8, 13),
+    "Mela": (4, 11),
+    "Ananas": (3, 10),
+    "Actimel": (6, 12),
+    "Buste Manici": (1, 3),
+    "Buste A": (2, 4),
+    "Bicchieri 0.5": (3, 5),
+    "Bicchieri 0.4": (4, 6),
+    "Box Happy Meal": (5, 10),
+    "Filtri friggitrici": (5, 10),
+    "Guanti in nitrile": (2, 5),
+    "Sgrassatore Superfici": (1, 7),
+    "Sgrassatore Pavimenti": (2, 6),
+    "Stracci Banda Rossa": (3, 8)
 }
 
 @st.cache_data 
 def genera_database_simulato(nome_prodotto):
     date_storiche = pd.date_range(end=pd.Timestamp.today(), periods=1095, freq="D")
     np.random.seed(len(nome_prodotto) * 42) 
-    vendite = np.random.normal(loc=200, scale=30, size=len(date_storiche))
+    
+    # Preleva il range specifico per il prodotto (default 10-20 se ci sono errori)
+    min_val, max_val = range_consumi.get(nome_prodotto, (10, 20))
+    
+    # Crea una curva di distribuzione verosimile all'interno del range
+    media = (min_val + max_val) / 2
+    deviazione = (max_val - min_val) / 4 
+    
+    vendite = np.random.normal(loc=media, scale=deviazione, size=len(date_storiche))
+    
     df = pd.DataFrame({'Data': date_storiche, 'Domanda_Scatole': vendite})
     df['Giorno_Num'] = df['Data'].dt.dayofweek 
+    
+    # Simula il picco del weekend (aumento del 40%)
     df.loc[df['Giorno_Num'] >= 5, 'Domanda_Scatole'] *= 1.40 
-    df['Domanda_Scatole'] = np.maximum(df['Domanda_Scatole'].round(), 0).astype(int)
+    
+    # Arrotonda e fissa i limiti per non sforare mai i valori minimi stabiliti
+    df['Domanda_Scatole'] = np.maximum(df['Domanda_Scatole'].round(), min_val).astype(int)
+    max_weekend = int(max_val * 1.40)
+    df['Domanda_Scatole'] = np.minimum(df['Domanda_Scatole'], max_weekend)
+    
     return df
 
 
@@ -226,7 +246,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     with col_prz:
         prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
     with col_qta:
-        # ---- MODIFICA QUI: partenza da 1, scatti di 1 cartone alla volta ----
         quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=1, value=1, step=1)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -405,7 +424,7 @@ elif pagina_selezionata == "📋 Inventario":
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
             
         with col_btn_del:
-            st.button("🗑️️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
+            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
