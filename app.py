@@ -43,7 +43,7 @@ def toggle_del_prodotto():
     st.session_state['mostra_del_prodotto'] = not st.session_state['mostra_del_prodotto']
     st.session_state['mostra_add_prodotto'] = False
 
-# Inizializzazione Inventario modificabile con i 5 prodotti per reparto
+# Inizializzazione Inventario modificabile
 if 'inventario' not in st.session_state:
     st.session_state['inventario'] = {
         "❄️ Congelato": pd.DataFrame({
@@ -65,7 +65,7 @@ if 'inventario' not in st.session_state:
             "Stato": ["🟢 Regolare", "🟢 Regolare", "🟢 Regolare", "🟢 Regolare", "🟢 Regolare"]
         }),
         "🧹 Operativo": pd.DataFrame({
-            "Prodotto": ["Filtri friggitrici", "guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"],
+            "Prodotto": ["Filtri friggitrici", "Guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"],
             "Scatole": [8, 2, 5, 4, 15],
             "Interni": [0, 1, 0, 1, 2],
             "Stato": ["🟢 Regolare", "🔴 Critico", "🟡 Attenzione", "🟡 Attenzione", "🟢 Regolare"]
@@ -114,20 +114,38 @@ if not st.session_state['autenticato']:
 # =====================================================================
 # 3. DATI IN MEMORIA E FUNZIONI
 # =====================================================================
-# Catalogo aggiornato a 5 prodotti per reparto
 catalogo_prodotti = {
     "❄️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
     "🥬 Fresco": ["Insalata Iceberg", "Insalata Batavia", "Mela", "Ananas", "Actimel"],
     "📦 Secco": ["Buste Manici", "Buste A", "Bicchieri 0.5", "Bicchieri 0.4", "Box Happy Meal"],
-    "🧹 Operativo": ["Filtri friggitrici", "guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"]
+    "🧹 Operativo": ["Filtri friggitrici", "Guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"]
 }
 
-# Listino prezzi aggiornato con i nuovi prodotti per evitare errori nei calcoli
+# NUOVO LISTINO PREZZI AGGIORNATO (Valori Fissi)
 prezzi_prodotti = {
-    "Hamburger di Manzo 4:1": 45.00, "Hamburger di Manzo 7:1": 50.00, "Hamburger di manzo 10:1": 55.00, "Mc Fries": 28.50, "McNugget di pollo": 55.00,
-    "Insalata Iceberg": 15.00, "Insalata Batavia": 16.50, "Mela": 12.00, "Ananas": 22.00, "Actimel": 18.00,
-    "Buste Manici": 25.00, "Buste A": 20.00, "Bicchieri 0.5": 35.00, "Bicchieri 0.4": 30.00, "Box Happy Meal": 40.00,
-    "Filtri friggitrici": 60.00, "guanti in nitrile": 8.50, "Sgrassatore Superfici": 14.00, "Sgrassatore Pavimenti": 12.00, "Stracci Banda Rossa": 10.00
+    "Hamburger di Manzo 4:1": 70.00, 
+    "Hamburger di Manzo 7:1": 80.00, 
+    "Hamburger di manzo 10:1": 85.00, 
+    "Mc Fries": 50.00, 
+    "McNugget di pollo": 55.00,
+    
+    "Insalata Iceberg": 30.00, 
+    "Insalata Batavia": 35.00, 
+    "Mela": 15.00, 
+    "Ananas": 6.00, 
+    "Actimel": 20.00,
+    
+    "Buste Manici": 45.00, 
+    "Buste A": 35.00, 
+    "Bicchieri 0.5": 55.00, 
+    "Bicchieri 0.4": 50.00, 
+    "Box Happy Meal": 70.00,
+    
+    "Filtri friggitrici": 60.00, 
+    "Guanti in nitrile": 15.00, 
+    "Sgrassatore Superfici": 55.00, 
+    "Sgrassatore Pavimenti": 60.00, 
+    "Stracci Banda Rossa": 30.00
 }
 
 @st.cache_data 
@@ -495,7 +513,7 @@ elif pagina_selezionata == "📊 Consumazioni Effettuate":
         
     st.markdown("---")
 
-    st.markdown("### 🗓️️ Ricerca Consumi per Singola Data")
+    st.markdown("### 🗓️ Ricerca Consumi per Singola Data")
     st.markdown(f"Verifica quante scatole di **{prodotto_analisi}** sono state consumate in un giorno specifico.")
     
     col_data, col_btn_cerca, _ = st.columns([1, 1, 2])
