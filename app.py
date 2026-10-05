@@ -219,7 +219,7 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     
-    # === 1. SELEZIONE PRODOTTO (In cima per pilotare tutto) ===
+    # === 1. SELEZIONE PRODOTTO ===
     st.markdown("### 1. Seleziona l'articolo da analizzare e ordinare")
     
     col_rep, col_prod = st.columns(2)
@@ -238,7 +238,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         costo_mantenimento_default = round(prezzo_base * 0.15, 2)
         costo_mantenimento = st.number_input("Costo Mantenimento unitario (€)", value=costo_mantenimento_default, step=0.1)
 
-    # === 2. MOTORE DI CALCOLO EOQ ===
+    # === 2. MOTORE DI CALCOLO EOQ E MEDIE ===
     df_storico = genera_database_simulato(prodotto_scelto)
     d_media = df_storico['Domanda_Scatole'].mean()
     sigma = df_storico['Domanda_Scatole'].std()
@@ -252,29 +252,32 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     scorta_sicurezza = z * sigma * math.sqrt(lead_time)
     rop = (d_media * lead_time) + scorta_sicurezza
 
-    # === 3. VISUALIZZAZIONE SUGGERIMENTI EOQ ===
+    # === 3. VISUALIZZAZIONE SUGGERIMENTI EOQ (ORA SONO 4 COLONNE) ===
     st.markdown("<br>", unsafe_allow_html=True)
     st.subheader("Ordine consigliato tramite Modello EOQ")
-    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
+    
+    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
     with col_kpi1:
-        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Quantità Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole per minimizzare i costi</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Media Giornaliera</div><div class="kpi-valore">{int(d_media)}</div><div class="kpi-dettaglio">Scatole stimate/giorno</div></div>""", unsafe_allow_html=True)
     with col_kpi2:
-        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Soglia di Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Ordinare a questa giacenza</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Quantità Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole ottimali</div></div>""", unsafe_allow_html=True)
     with col_kpi3:
+        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Soglia di Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Ordinare a questa giacenza</div></div>""", unsafe_allow_html=True)
+    with col_kpi4:
         st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta di Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura imprevisti</div></div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # === 4. COMPILAZIONE ORDINE ===
+    # === 4. COMPILAZIONE ORDINE (INVERTITI QUANTITÀ E PREZZO) ===
     st.title("Compilazione Ordine")
     st.markdown("Verifica i suggerimenti dell'algoritmo e inserisci la quantità definitiva da aggiungere alla distinta d'ordine.")
 
-    col_prz, col_qta = st.columns(2)
+    col_qta, col_prz = st.columns(2)
+    with col_qta:
+        # La casella si pre-compila con il valore dell'EOQ arrotondato
+        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=1, value=int(eoq), step=1)
     with col_prz:
         prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
-    with col_qta:
-        # CHICCA: La casella si pre-compila con il valore dell'EOQ arrotondato!
-        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=1, value=int(eoq), step=1)
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_add, col_view = st.columns(2)
@@ -353,13 +356,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     # === 6. VECCHI DATI E STATISTICHE (NASCOSTI IN UN EXPANDER) ===
     st.markdown("---")
-    with st.expander("📊 Vedi Parametri Contrattuali e Statistiche Storiche del prodotto"):
-        col_dem1, col_dem2 = st.columns(2)
-        with col_dem1:
-            st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Media Giornaliera (d)</div><div class="metric-value">{int(d_media)}</div><div class="metric-subtitle">Scatole al giorno</div></div>""", unsafe_allow_html=True)
-        with col_dem2:
-            st.markdown(f"""<div class="metric-box"><div class="metric-title">Domanda Annua Stimata (D)</div><div class="metric-value">{int(D_annua):,}</div><div class="metric-subtitle">Scatole totali previste</div></div>""".replace(',', '.'), unsafe_allow_html=True) 
-
+    with st.expander("📊 Vedi Parametri Contrattuali (Bloccati)"):
         col_c1, col_c2 = st.columns(2)
         with col_c1:
             st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Consegna [L]</div><div class="contract-value">🔒 {lead_time} Giorni</div></div>""", unsafe_allow_html=True)
@@ -406,7 +403,7 @@ elif pagina_selezionata == "📋 Inventario":
         }
 
         with tab1:
-            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(st.session_state['inventario']["❄️️ Congelato"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_congelato")
+            st.session_state['inventario']["❄️ Congelato"] = st.data_editor(st.session_state['inventario']["❄️ Congelato"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_congelato")
         with tab2:
             st.session_state['inventario']["🥬 Fresco"] = st.data_editor(st.session_state['inventario']["🥬 Fresco"], use_container_width=True, hide_index=True, column_config=configurazione_colonne, key="edit_fresco")
         with tab3:
