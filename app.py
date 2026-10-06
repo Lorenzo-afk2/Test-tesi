@@ -115,7 +115,7 @@ if not st.session_state['autenticato']:
 # 3. DATI IN MEMORIA E RANGE DI CONSUMO
 # =====================================================================
 catalogo_prodotti = {
-    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
+    "❄️️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
     "🥬 Fresco": ["Insalata Iceberg", "Insalata Batavia", "Mela", "Ananas", "Actimel"],
     "📦 Secco": ["Buste Manici", "Buste A", "Bicchieri 0.5", "Bicchieri 0.4", "Box Happy Meal"],
     "🧹 Operativo": ["Filtri friggitrici", "Guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"]
@@ -199,7 +199,6 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     
-    # MODIFICA: Titolo rimpicciolito (usando markdown h2 invece di st.title)
     st.markdown("## Compilazione ordine - Modello EOQ, ROP & SAFETY STOCK")
     
     # Parametri operativi Base per modello EOQ
@@ -227,14 +226,12 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
 
-    # === 2. ESTRAZIONE DATI STORICI (3 ANNI) ===
-    # Il sistema analizza i dati generati per 3 anni per fornire i valori di default
+    # === 2. ESTRAZIONE DATI STORICI E GIACENZA ===
     df_storico = genera_database_simulato(prodotto_scelto)
     calc_d_media = df_storico['Domanda_Scatole'].mean()
     calc_sigma = df_storico['Domanda_Scatole'].std()
     calc_D_annua = calc_d_media * 365
 
-    # Lettura giacenza reale dall'inventario
     df_inventario_reparto = st.session_state['inventario'][reparto_scelto]
     riga_prodotto = df_inventario_reparto[df_inventario_reparto['Prodotto'] == prodotto_scelto]
     giacenza_attuale = int(riga_prodotto['Scatole'].values[0]) if not riga_prodotto.empty else 0
@@ -243,7 +240,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     # === 3. PANNELLO DI INSERIMENTO DATI (UTENTE) ===
     st.markdown("---")
     st.markdown("### 2. Parametri del Modello Matematico")
-    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni di esercizio, ma puoi modificarli manualmente per simulare e calcolare l'EOQ in scenari diversi. *Il costo di Setup e il Lead Time sono bloccati per policy aziendale.*")
+    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni. Il calcolo dell'EOQ incorpora separatamente il Costo di Mantenimento puro e il Rischio di Scadenza (Spoilage Cost).")
     
     col_in1, col_in2, col_in3 = st.columns(3)
     
@@ -255,7 +252,20 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     with col_in2:
         st.markdown("**Variabili di Costo**")
         input_S = st.number_input("Costo di Setup/Ordine (S) [€]", value=50.0, step=5.0, disabled=True)
-        input_H = st.number_input("Costo Mantenimento (H) [€/anno]", value=float(round(prezzo_base * 0.15, 2)), step=0.5)
+        
+        # Logica costo mantenimento puro (spazio/energia)
+        if reparto_scelto == "❄️ Congelato":
+            tasso_H = 0.25 # Costa di più la cella frigo
+        else:
+            tasso_H = 0.10 # Scaffalature normali
+            
+        costo_mantenimento_default = float(round(prezzo_base * tasso_H, 2))
+        input_H = st.number_input("Costo Mantenimento (H) [€/anno]", value=costo_mantenimento_default, step=0.5)
+        
+        # Logica rischio scadenza separata
+        tasso_spoilage = 0.75 if reparto_scelto == "🥬 Fresco" else 0.0
+        spoilage_default = float(round(prezzo_base * tasso_spoilage, 2))
+        input_spoilage = st.number_input("Rischio Scadenza [€/anno]", value=spoilage_default, step=0.5)
 
     with col_in3:
         st.markdown("**Variabili Logistiche e Variabilità**")
@@ -268,19 +278,22 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
 
-    # 1. Calcolo Scorta di Sicurezza: in funzione della variabilità e tempi di consegna
+    # Scorta di Sicurezza
     scorta_sicurezza = z * input_sigma * math.sqrt(input_L)
     
-    # 2. Calcolo Livello di Riordino: ROP = d * L + SS
+    # Livello di Riordino
     rop = (input_d * input_L) + scorta_sicurezza
     
-    # 3. Calcolo Lotto Economico: EOQ = sqrt((2 * D * S) / H)
-    if input_H > 0:
-        eoq = math.sqrt((2 * input_D * input_S) / input_H)
+    # Costo totale denominatore EOQ = Mantenimento + Scadenza
+    H_totale = input_H + input_spoilage
+    
+    # Lotto Economico (EOQ)
+    if H_totale > 0:
+        eoq = math.sqrt((2 * input_D * input_S) / H_totale)
     else:
         eoq = 0
 
-    # Logica Manageriale del Modello:
+    # Logica Manageriale
     if giacenza_attuale <= rop:
         ordine_suggerito = int(eoq)
         messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza attuale ({giacenza_attuale}) è inferiore o uguale al Livello di Riordino ({int(rop)}). Si suggerisce di emettere un ordine pari all'EOQ."
@@ -291,8 +304,6 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     # === 5. VISUALIZZAZIONE RISULTATI MATEMATICI ===
     st.markdown("<br>", unsafe_allow_html=True)
-    
-    # MODIFICA: Sottotitolo aggiornato
     st.subheader("Risultati Algoritmo EOQ, ROP & SAFETY STOCK")
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
