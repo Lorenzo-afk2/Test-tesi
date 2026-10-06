@@ -195,43 +195,46 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE (STATISTICA E VARIABILITÀ)
+# 6. ROUTING: COMPILAZIONE ORDINE (MODELLO EOQ PURO)
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     
     st.title("Compilazione Ordine")
     
-    # Parametri operativi (2 Ordini a Settimana) definiti in cima
-    T = 3.5  # Giorni tra un ordine e l'altro
+    # Parametri operativi Base per modello EOQ
     L = 3.0  # Lead Time di consegna
     costo_ordine = 50.0 
 
     # === 0. PARAMETRI CONTRATTUALI BLOCCATI (EXPANDER IN CIMA) ===
-    with st.expander("📊 Parametri di Rifornimento (Bloccati da Direzione)", expanded=False):
-        col_c1, col_c2, col_c3 = st.columns(3)
+    with st.expander("📊 Parametri Logistici (Bloccati da Direzione)", expanded=False):
+        col_c1, col_c2 = st.columns(2)
         with col_c1:
-            st.markdown(f"""<div class="contract-box"><div class="contract-title">Frequenza Consegne (T)</div><div class="contract-value">🔒 {T} gg (2/sett)</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Trasporto (L)</div><div class="contract-value">🔒 {int(L)} Giorni</div></div>""", unsafe_allow_html=True)
         with col_c2:
-            st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time (L)</div><div class="contract-value">🔒 {int(L)} Giorni</div></div>""", unsafe_allow_html=True)
-        with col_c3:
-            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Singolo Ordine</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Singolo Ordine / Trasporto (Co)</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # === 1. SELEZIONE PRODOTTO ===
+    # === 1. SELEZIONE PRODOTTO E PARAMETRI VARIABILI ===
     st.markdown("### 1. Seleziona l'articolo da analizzare e ordinare")
     
-    col_rep, col_prod, col_srv = st.columns([1.5, 1.5, 1])
+    col_rep, col_prod = st.columns(2)
     with col_rep:
         reparto_scelto = st.selectbox("Seleziona il Reparto", list(catalogo_prodotti.keys()))
     with col_prod:
         prodotto_scelto = st.selectbox("Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
-    with col_srv:
-        livello_servizio = st.selectbox("Livello Servizio desiderato (%)", [90, 95, 99], index=1)
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
+    
+    # Parametri per EOQ gestibili dal manager
+    col_srv, col_mnt = st.columns(2)
+    with col_srv:
+        livello_servizio = st.selectbox("Livello Servizio desiderato (%)", [90, 95, 99], index=1)
+    with col_mnt:
+        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
+        costo_mantenimento = st.number_input("Costo Mantenimento unitario annuo (€)", value=costo_mantenimento_default, step=0.1)
 
-    # === 2. MOTORE STATISTICO E LOGISTICO (Variabilità e Periodicità) ===
+    # === 2. MOTORE STATISTICO E MODELLO EOQ ===
     
     # Lettura giacenza reale dall'inventario
     df_inventario_reparto = st.session_state['inventario'][reparto_scelto]
@@ -243,48 +246,52 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     d_media = df_storico['Domanda_Scatole'].mean()
     sigma = df_storico['Domanda_Scatole'].std() # Deviazione standard (Variabilità)
     D_annua = d_media * 365
+    
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
 
-    costo_mantenimento = round(prezzo_base * 0.15, 2)
-
-    # EOQ Classico (Lotto teorico se non ci fossero vincoli di tempo)
-    eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
-
-    # Scorta di Sicurezza calcolata sulla variabilità (σ) nel periodo a rischio (T+L)
-    scorta_sicurezza = z * sigma * math.sqrt(T + L)
+    # SCORTA DI SICUREZZA calcolata per coprire la variabilità solo durante il Lead Time
+    scorta_sicurezza = z * sigma * math.sqrt(L)
     
-    # Livello di Riordino ROP (Soglia d'allarme)
+    # ROP (Livello di Riordino) = Consumo durante il Lead Time + Scorta di Sicurezza
     rop = (d_media * L) + scorta_sicurezza
     
-    # Target Stock (Massimo livello da raggiungere per coprire i prossimi 3.5 giorni)
-    target_stock = (d_media * (T + L)) + scorta_sicurezza
+    # EOQ (Lotto Economico di Riordino)
+    eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
     
-    # Calcolo dell'ordine matematico reale (Da Ordinare = Target - Giacenza)
-    ordine_suggerito = math.ceil(target_stock - giacenza_attuale)
-    if ordine_suggerito < 0: 
+    # LOGICA DI ORDINE EOQ CONTINUA:
+    # Si ordina l'EOQ solo se la giacenza attuale scende sotto o è uguale al Livello di Riordino (ROP)
+    if giacenza_attuale <= rop:
+        ordine_suggerito = int(eoq)
+        messaggio_ordine = f"⚠️ La giacenza ({giacenza_attuale}) ha raggiunto o superato il Livello di Riordino ({int(rop)}). **Il sistema suggerisce di ordinare il Lotto Economico (EOQ).**"
+    else:
         ordine_suggerito = 0
-
+        messaggio_ordine = f"✅ La giacenza ({giacenza_attuale}) è sopra il Livello di Riordino ({int(rop)}). **Nessun ordine necessario al momento.**"
 
     # === 3. VISUALIZZAZIONE SUGGERIMENTI STATISTICI (4 COLONNE) ===
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Ordine consigliato tramite Modello Logistico")
+    st.subheader("Ordine consigliato tramite Modello EOQ")
     
     col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
     with col_kpi1:
-        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Media Giornaliera (d)</div><div class="kpi-valore">{int(d_media)}</div><div class="kpi-dettaglio">Variabilità σ: <b>{sigma:.1f}</b></div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Media Giornaliera</div><div class="kpi-valore">{int(d_media)}</div><div class="kpi-dettaglio">Variabilità σ: <b>{sigma:.1f}</b></div></div>""", unsafe_allow_html=True)
     with col_kpi2:
-        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Modello EOQ</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Lotto economico teorico</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole da ordinare</div></div>""", unsafe_allow_html=True)
     with col_kpi3:
-        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Livello di Riordino</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Punto critico d'ordine</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Livello Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Soglia d'allarme scorte</div></div>""", unsafe_allow_html=True)
     with col_kpi4:
-        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Scorta Sicurezza</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Gestione imprevisti (Z-Score)</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Scorta Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura Lead Time</div></div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
     # === 4. COMPILAZIONE ORDINE (AUTOCOMPILATA E INVERTITA) ===
     st.markdown("### 2. Conferma Dati e Inserisci nel Carrello")
-    st.markdown(f"In base alla giacenza attuale in cella (**{giacenza_attuale} scatole**), il sistema calcola la differenza per raggiungere il Target Stock.")
+    
+    # Mostra se bisogna ordinare o no in base alla regola ROP
+    if giacenza_attuale <= rop:
+        st.warning(messaggio_ordine)
+    else:
+        st.info(messaggio_ordine)
 
     col_qta, col_prz = st.columns(2)
     with col_qta:
@@ -426,7 +433,7 @@ elif pagina_selezionata == "📋 Inventario":
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
             
         with col_btn_del:
-            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
+            st.button("🗑️️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
