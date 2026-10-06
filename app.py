@@ -199,9 +199,23 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     
-    st.title("Compilazione Ordine - Modello EOQ & ROP")
+    st.title("Compilazione ordine - Modello EOQ, ROP & SAFETY STOCK")
     
-    # === 1. SELEZIONE PRODOTTO ===
+    # Parametri operativi Base per modello EOQ
+    L = 3.0  # Lead Time di consegna
+    costo_ordine = 50.0 
+
+    # === 0. PARAMETRI CONTRATTUALI BLOCCATI (EXPANDER IN CIMA) ===
+    with st.expander("📊 Parametri Logistici (Bloccati da Direzione)", expanded=False):
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Trasporto (L)</div><div class="contract-value">🔒 {int(L)} Giorni</div></div>""", unsafe_allow_html=True)
+        with col_c2:
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Singolo Ordine / Trasporto (Co)</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # === 1. SELEZIONE PRODOTTO E PARAMETRI VARIABILI ===
     st.markdown("### 1. Seleziona l'articolo da analizzare")
     
     col_rep, col_prod = st.columns(2)
@@ -228,7 +242,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     # === 3. PANNELLO DI INSERIMENTO DATI (UTENTE) ===
     st.markdown("---")
     st.markdown("### 2. Parametri del Modello Matematico")
-    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni di esercizio, ma puoi modificarli manualmente per simulare e calcolare l'EOQ in scenari diversi.")
+    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni di esercizio, ma puoi modificarli manualmente per simulare e calcolare l'EOQ in scenari diversi. *Il costo di Setup e il Lead Time sono bloccati per policy aziendale.*")
     
     col_in1, col_in2, col_in3 = st.columns(3)
     
@@ -239,13 +253,14 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         
     with col_in2:
         st.markdown("**Variabili di Costo**")
-        input_S = st.number_input("Costo di Setup/Ordine (S) [€]", value=50.0, step=5.0)
-        # Costo di mantenimento calcolato di default al 15% del prezzo
+        # MODIFICA: Costo di Setup bloccato (disabled=True)
+        input_S = st.number_input("Costo di Setup/Ordine (S) [€]", value=50.0, step=5.0, disabled=True)
         input_H = st.number_input("Costo Mantenimento (H) [€/anno]", value=float(round(prezzo_base * 0.15, 2)), step=0.5)
 
     with col_in3:
         st.markdown("**Variabili Logistiche e Variabilità**")
-        input_L = st.number_input("Lead Time (L) [giorni]", value=3.0, step=1.0)
+        # MODIFICA: Lead Time bloccato (disabled=True)
+        input_L = st.number_input("Lead Time (L) [giorni]", value=3.0, step=1.0, disabled=True)
         input_sigma = st.number_input("Variabilità Domanda (σ)", value=float(round(calc_sigma, 2)), step=0.1)
         livello_servizio = st.selectbox("Livello di Servizio per Z-Score", [90, 95, 99], index=1)
 
