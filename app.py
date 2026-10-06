@@ -240,7 +240,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     # === 3. PANNELLO DI INSERIMENTO DATI (UTENTE) ===
     st.markdown("---")
     st.markdown("### 2. Parametri del Modello Matematico")
-    st.info("💡 **Modalità Analitica:** Per calcolare un lotto economico realistico sui prodotti deperibili, il sistema applica il **Vincolo della Shelf Life**: l'EOQ teorico viene ridotto matematicamente se i giorni di copertura dell'ordine superano i giorni di vita utile del prodotto.")
+    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni. Il calcolo dell'EOQ incorpora separatamente il Costo di Mantenimento puro e il Tasso di Rischio Scadenza (Spoilage Cost).")
     
     col_in1, col_in2, col_in3 = st.columns(3)
     
@@ -267,9 +267,13 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         input_L = st.number_input("Lead Time (L) [giorni]", value=3.0, step=1.0, disabled=True)
         input_sigma = st.number_input("Variabilità Domanda (σ)", value=float(round(calc_sigma, 2)), step=0.1)
         
-        # NUOVA VARIABILE LOGISTICA PER EVITARE IL PARADOSSO DELL'INSALATA
-        shelf_life_default = 5 if reparto_scelto == "🥬 Fresco" else (90 if reparto_scelto == "❄️ Congelato" else 180)
-        input_shelf_life = st.number_input("Shelf Life / Scadenza Massima [Giorni]", value=int(shelf_life_default), step=1)
+        # VARIABILE SHELF LIFE: VISIBILE SOLO PER DEPERIBILI
+        if reparto_scelto in ["🥬 Fresco", "❄️ Congelato"]:
+            shelf_life_default = 5 if reparto_scelto == "🥬 Fresco" else 90
+            input_shelf_life = st.number_input("Scadenza Massima [Giorni]", value=int(shelf_life_default), step=1)
+        else:
+            # Per Secco e Operativo il vincolo è disattivato (valore infinito)
+            input_shelf_life = 99999
 
 
     # === 4. CALCOLI ALGORITMO EOQ & ROP CON VINCOLO DI SHELF LIFE ===
@@ -293,8 +297,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     else:
         eoq_teorico = 0
         
-    # APPLICAZIONE DEL VINCOLO DI SHELF LIFE (LA VERA CORREZIONE MATEMATICA)
-    # Quanti giorni ci metto a consumare l'EOQ teorico calcolato?
+    # APPLICAZIONE DEL VINCOLO DI SHELF LIFE
     giorni_copertura_eoq = eoq_teorico / input_d if input_d > 0 else 0
     vincolo_applicato = False
 
@@ -305,13 +308,10 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     else:
         eoq_corretto = eoq_teorico
 
-    # Logica Manageriale
+    # Logica Manageriale e Messaggi Puliti
     if giacenza_attuale <= rop:
         ordine_suggerito = int(eoq_corretto)
-        if vincolo_applicato:
-            messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è sotto il Riordino ({int(rop)}). L'EOQ matematico puro sarebbe {int(eoq_teorico)} scatole, ma supererebbe i {input_shelf_life} giorni di scadenza! L'ordine è stato limitato a **{int(eoq_corretto)} scatole**."
-        else:
-            messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è inferiore o uguale al Livello di Riordino ({int(rop)}). Si suggerisce di emettere un ordine pari all'EOQ ottimale."
+        messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è inferiore o uguale al Livello di Riordino ({int(rop)}). Si suggerisce di ordinare **{ordine_suggerito} scatole**."
     else:
         ordine_suggerito = 0
         messaggio_ordine = f"✅ **REGOLARE:** La giacenza attuale ({giacenza_attuale}) è superiore al Livello di Riordino ({int(rop)}). Nessun ordine necessario."
@@ -479,7 +479,7 @@ elif pagina_selezionata == "📋 Inventario":
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
             
         with col_btn_del:
-            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
+            st.button("🗑️️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
