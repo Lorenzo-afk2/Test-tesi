@@ -240,7 +240,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     # === 3. PANNELLO DI INSERIMENTO DATI (UTENTE) ===
     st.markdown("---")
     st.markdown("### 2. Parametri del Modello Matematico")
-    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni. Il calcolo dell'EOQ incorpora separatamente il Costo di Mantenimento puro e il Tasso di Rischio Scadenza (Spoilage Cost).")
+    st.info("💡 **Modalità Analitica:** Per calcolare un lotto economico realistico sui prodotti deperibili, il sistema applica il **Vincolo della Shelf Life**: l'EOQ teorico viene ridotto matematicamente se i giorni di copertura dell'ordine superano i giorni di vita utile del prodotto.")
     
     col_in1, col_in2, col_in3 = st.columns(3)
     
@@ -254,27 +254,27 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         input_S = st.number_input("Costo di Setup/Ordine (S) [€]", value=50.0, step=5.0, disabled=True)
         
         # Logica costo mantenimento puro (spazio/energia)
-        if reparto_scelto == "❄️ Congelato":
-            tasso_H = 0.25 # Costa di più la cella frigo
-        else:
-            tasso_H = 0.10 # Scaffalature normali
-            
+        tasso_H = 0.25 if reparto_scelto == "❄️ Congelato" else 0.10
         costo_mantenimento_default = float(round(prezzo_base * tasso_H, 2))
         input_H = st.number_input("Costo Mantenimento (H) [€/scatola/anno]", value=costo_mantenimento_default, step=0.5)
         
-        # LOGICA RISCHIO SCADENZA (SPOILAGE) IN PERCENTUALE
-        tasso_spoilage_perc = 75.0 if reparto_scelto == "🥬 Fresco" else 0.0
-        input_spoilage_perc = st.number_input("Rischio Scadenza [% sul prezzo base]", value=tasso_spoilage_perc, step=5.0)
+        # Rischio Scadenza realistico
+        tasso_spoilage_perc = 25.0 if reparto_scelto == "🥬 Fresco" else (2.0 if reparto_scelto == "❄️ Congelato" else 0.0)
+        input_spoilage_perc = st.number_input("Rischio Scadenza e Smaltimento [% sul prezzo]", value=tasso_spoilage_perc, step=1.0)
 
     with col_in3:
         st.markdown("**Variabili Logistiche e Variabilità**")
         input_L = st.number_input("Lead Time (L) [giorni]", value=3.0, step=1.0, disabled=True)
         input_sigma = st.number_input("Variabilità Domanda (σ)", value=float(round(calc_sigma, 2)), step=0.1)
-        livello_servizio = st.selectbox("Livello di Servizio per Z-Score", [90, 95, 99], index=1)
+        
+        # NUOVA VARIABILE LOGISTICA PER EVITARE IL PARADOSSO DELL'INSALATA
+        shelf_life_default = 5 if reparto_scelto == "🥬 Fresco" else (90 if reparto_scelto == "❄️ Congelato" else 180)
+        input_shelf_life = st.number_input("Shelf Life / Scadenza Massima [Giorni]", value=int(shelf_life_default), step=1)
 
 
-    # === 4. CALCOLI ALGORITMO EOQ & ROP ===
+    # === 4. CALCOLI ALGORITMO EOQ & ROP CON VINCOLO DI SHELF LIFE ===
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
+    livello_servizio = 95 # Fisso a standard aziendale per non appesantire l'interfaccia
     z = z_scores[livello_servizio]
 
     # Scorta di Sicurezza
@@ -283,22 +283,35 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     # Livello di Riordino
     rop = (input_d * input_L) + scorta_sicurezza
     
-    # Calcolo costo in Euro del Rischio di Scadenza da sommare ad H
+    # Calcolo Costo Totale (H) = Mantenimento + Spoilage
     valore_spoilage_euro = prezzo_base * (input_spoilage_perc / 100.0)
-    
-    # Costo totale denominatore EOQ = Mantenimento + Valore Spoilage in Euro
     H_totale = input_H + valore_spoilage_euro
     
-    # Lotto Economico (EOQ)
+    # CALCOLO EOQ TEORICO
     if H_totale > 0:
-        eoq = math.sqrt((2 * input_D * input_S) / H_totale)
+        eoq_teorico = math.sqrt((2 * input_D * input_S) / H_totale)
     else:
-        eoq = 0
+        eoq_teorico = 0
+        
+    # APPLICAZIONE DEL VINCOLO DI SHELF LIFE (LA VERA CORREZIONE MATEMATICA)
+    # Quanti giorni ci metto a consumare l'EOQ teorico calcolato?
+    giorni_copertura_eoq = eoq_teorico / input_d if input_d > 0 else 0
+    vincolo_applicato = False
+
+    # Se l'EOQ teorico supera i giorni in cui il prodotto va a male, si taglia l'EOQ.
+    if giorni_copertura_eoq > input_shelf_life:
+        eoq_corretto = input_d * input_shelf_life
+        vincolo_applicato = True
+    else:
+        eoq_corretto = eoq_teorico
 
     # Logica Manageriale
     if giacenza_attuale <= rop:
-        ordine_suggerito = int(eoq)
-        messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza attuale ({giacenza_attuale}) è inferiore o uguale al Livello di Riordino ({int(rop)}). Si suggerisce di emettere un ordine pari all'EOQ."
+        ordine_suggerito = int(eoq_corretto)
+        if vincolo_applicato:
+            messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è sotto il Riordino ({int(rop)}). L'EOQ matematico puro sarebbe {int(eoq_teorico)} scatole, ma supererebbe i {input_shelf_life} giorni di scadenza! L'ordine è stato limitato a **{int(eoq_corretto)} scatole**."
+        else:
+            messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è inferiore o uguale al Livello di Riordino ({int(rop)}). Si suggerisce di emettere un ordine pari all'EOQ ottimale."
     else:
         ordine_suggerito = 0
         messaggio_ordine = f"✅ **REGOLARE:** La giacenza attuale ({giacenza_attuale}) è superiore al Livello di Riordino ({int(rop)}). Nessun ordine necessario."
@@ -310,7 +323,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
-        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Economico (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Quantità ottimale d'ordine</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Economico (EOQ)</div><div class="kpi-valore">{int(eoq_corretto)}</div><div class="kpi-dettaglio">{"(Limitato dalla Scadenza)" if vincolo_applicato else "Quantità ottimale d'ordine"}</div></div>""", unsafe_allow_html=True)
     with col_kpi2:
         st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Scorta Sicurezza (SS)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura variabilità</div></div>""", unsafe_allow_html=True)
     with col_kpi3:
