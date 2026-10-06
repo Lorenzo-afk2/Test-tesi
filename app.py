@@ -268,7 +268,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         input_sigma = st.number_input("Variabilità Domanda (σ)", value=float(round(calc_sigma, 2)), step=0.1)
         
         # VARIABILE SHELF LIFE: VISIBILE SOLO PER DEPERIBILI
-        if reparto_scelto in ["🥬 Fresco", "❄️ Congelato"]:
+        if reparto_scelto in ["🥬 Fresco", "❄️️ Congelato"]:
             shelf_life_default = 5 if reparto_scelto == "🥬 Fresco" else 90
             input_shelf_life = st.number_input("Scadenza Massima [Giorni]", value=int(shelf_life_default), step=1)
         else:
@@ -299,19 +299,24 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         
     # APPLICAZIONE DEL VINCOLO DI SHELF LIFE
     giorni_copertura_eoq = eoq_teorico / input_d if input_d > 0 else 0
-    vincolo_applicato = False
 
     # Se l'EOQ teorico supera i giorni in cui il prodotto va a male, si taglia l'EOQ.
     if giorni_copertura_eoq > input_shelf_life:
         eoq_corretto = input_d * input_shelf_life
-        vincolo_applicato = True
     else:
         eoq_corretto = eoq_teorico
 
     # Logica Manageriale e Messaggi Puliti
     if giacenza_attuale <= rop:
         ordine_suggerito = int(eoq_corretto)
-        messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è inferiore o uguale al Livello di Riordino ({int(rop)}). Si suggerisce di ordinare **{ordine_suggerito} scatole**."
+        
+        # Scegli la parola corretta per definire lo stato della giacenza
+        if giacenza_attuale < int(rop):
+            stato_giacenza = "inferiore al"
+        else:
+            stato_giacenza = "uguale al"
+            
+        messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è {stato_giacenza} Livello di Riordino ({int(rop)}). Si suggerisce di ordinare **{ordine_suggerito} scatole**."
     else:
         ordine_suggerito = 0
         messaggio_ordine = f"✅ **REGOLARE:** La giacenza attuale ({giacenza_attuale}) è superiore al Livello di Riordino ({int(rop)}). Nessun ordine necessario."
@@ -323,7 +328,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
-        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Economico (EOQ)</div><div class="kpi-valore">{int(eoq_corretto)}</div><div class="kpi-dettaglio">{"(Limitato dalla Scadenza)" if vincolo_applicato else "Quantità ottimale d'ordine"}</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Economico (EOQ)</div><div class="kpi-valore">{int(eoq_corretto)}</div><div class="kpi-dettaglio">Quantità ottimale d'ordine</div></div>""", unsafe_allow_html=True)
     with col_kpi2:
         st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Scorta Sicurezza (SS)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura variabilità</div></div>""", unsafe_allow_html=True)
     with col_kpi3:
@@ -479,7 +484,7 @@ elif pagina_selezionata == "📋 Inventario":
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
             
         with col_btn_del:
-            st.button("🗑️️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
+            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
