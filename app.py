@@ -114,8 +114,9 @@ if not st.session_state['autenticato']:
 # =====================================================================
 # 3. DATI IN MEMORIA E RANGE DI CONSUMO
 # =====================================================================
+# CORRETTA L'EMOJI DEL CONGELATO PER ESSERE IDENTICA AL SESSION_STATE
 catalogo_prodotti = {
-    "❄️️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
+    "❄️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
     "🥬 Fresco": ["Insalata Iceberg", "Insalata Batavia", "Mela", "Ananas", "Actimel"],
     "📦 Secco": ["Buste Manici", "Buste A", "Bicchieri 0.5", "Bicchieri 0.4", "Box Happy Meal"],
     "🧹 Operativo": ["Filtri friggitrici", "Guanti in nitrile", "Sgrassatore Superfici", "Sgrassatore Pavimenti", "Stracci Banda Rossa"]
