@@ -199,7 +199,8 @@ if pagina_selezionata == "🏠 Home Page":
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     
-    st.title("Compilazione ordine - Modello EOQ, ROP & SAFETY STOCK")
+    # MODIFICA: Titolo rimpicciolito (usando markdown h2 invece di st.title)
+    st.markdown("## Compilazione ordine - Modello EOQ, ROP & SAFETY STOCK")
     
     # Parametri operativi Base per modello EOQ
     L = 3.0  # Lead Time di consegna
@@ -253,13 +254,11 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         
     with col_in2:
         st.markdown("**Variabili di Costo**")
-        # MODIFICA: Costo di Setup bloccato (disabled=True)
         input_S = st.number_input("Costo di Setup/Ordine (S) [€]", value=50.0, step=5.0, disabled=True)
         input_H = st.number_input("Costo Mantenimento (H) [€/anno]", value=float(round(prezzo_base * 0.15, 2)), step=0.5)
 
     with col_in3:
         st.markdown("**Variabili Logistiche e Variabilità**")
-        # MODIFICA: Lead Time bloccato (disabled=True)
         input_L = st.number_input("Lead Time (L) [giorni]", value=3.0, step=1.0, disabled=True)
         input_sigma = st.number_input("Variabilità Domanda (σ)", value=float(round(calc_sigma, 2)), step=0.1)
         livello_servizio = st.selectbox("Livello di Servizio per Z-Score", [90, 95, 99], index=1)
@@ -292,7 +291,9 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     # === 5. VISUALIZZAZIONE RISULTATI MATEMATICI ===
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Risultati Algoritmo EOQ & ROP")
+    
+    # MODIFICA: Sottotitolo aggiornato
+    st.subheader("Risultati Algoritmo EOQ, ROP & SAFETY STOCK")
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
