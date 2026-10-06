@@ -195,28 +195,14 @@ if pagina_selezionata == "🏠 Home Page":
 
 
 # =====================================================================
-# 6. ROUTING: COMPILAZIONE ORDINE (MODELLO EOQ PURO)
+# 6. ROUTING: COMPILAZIONE ORDINE (MODELLO EOQ ACCADEMICO PURO)
 # =====================================================================
 elif pagina_selezionata == "📦 Compilazione Ordine":
     
-    st.title("Compilazione Ordine")
+    st.title("Compilazione Ordine - Modello EOQ & ROP")
     
-    # Parametri operativi Base per modello EOQ
-    L = 3.0  # Lead Time di consegna
-    costo_ordine = 50.0 
-
-    # === 0. PARAMETRI CONTRATTUALI BLOCCATI (EXPANDER IN CIMA) ===
-    with st.expander("📊 Parametri Logistici (Bloccati da Direzione)", expanded=False):
-        col_c1, col_c2 = st.columns(2)
-        with col_c1:
-            st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Trasporto (L)</div><div class="contract-value">🔒 {int(L)} Giorni</div></div>""", unsafe_allow_html=True)
-        with col_c2:
-            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Singolo Ordine / Trasporto (Co)</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    # === 1. SELEZIONE PRODOTTO E PARAMETRI VARIABILI ===
-    st.markdown("### 1. Seleziona l'articolo da analizzare e ordinare")
+    # === 1. SELEZIONE PRODOTTO ===
+    st.markdown("### 1. Seleziona l'articolo da analizzare")
     
     col_rep, col_prod = st.columns(2)
     with col_rep:
@@ -225,69 +211,87 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         prodotto_scelto = st.selectbox("Seleziona il Prodotto", catalogo_prodotti[reparto_scelto])
 
     prezzo_base = prezzi_prodotti[prodotto_scelto]
-    
-    # Parametri per EOQ gestibili dal manager
-    col_srv, col_mnt = st.columns(2)
-    with col_srv:
-        livello_servizio = st.selectbox("Livello Servizio desiderato (%)", [90, 95, 99], index=1)
-    with col_mnt:
-        costo_mantenimento_default = round(prezzo_base * 0.15, 2)
-        costo_mantenimento = st.number_input("Costo Mantenimento unitario annuo (€)", value=costo_mantenimento_default, step=0.1)
 
-    # === 2. MOTORE STATISTICO E MODELLO EOQ ===
-    
+    # === 2. ESTRAZIONE DATI STORICI (3 ANNI) ===
+    # Il sistema analizza i dati generati per 3 anni per fornire i valori di default
+    df_storico = genera_database_simulato(prodotto_scelto)
+    calc_d_media = df_storico['Domanda_Scatole'].mean()
+    calc_sigma = df_storico['Domanda_Scatole'].std()
+    calc_D_annua = calc_d_media * 365
+
     # Lettura giacenza reale dall'inventario
     df_inventario_reparto = st.session_state['inventario'][reparto_scelto]
     riga_prodotto = df_inventario_reparto[df_inventario_reparto['Prodotto'] == prodotto_scelto]
     giacenza_attuale = int(riga_prodotto['Scatole'].values[0]) if not riga_prodotto.empty else 0
 
-    # Statistica Avanzata sui Consumi
-    df_storico = genera_database_simulato(prodotto_scelto)
-    d_media = df_storico['Domanda_Scatole'].mean()
-    sigma = df_storico['Domanda_Scatole'].std() # Deviazione standard (Variabilità)
-    D_annua = d_media * 365
+
+    # === 3. PANNELLO DI INSERIMENTO DATI (UTENTE) ===
+    st.markdown("---")
+    st.markdown("### 2. Parametri del Modello Matematico")
+    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni di esercizio, ma puoi modificarli manualmente per simulare e calcolare l'EOQ in scenari diversi.")
     
+    col_in1, col_in2, col_in3 = st.columns(3)
+    
+    with col_in1:
+        st.markdown("**Variabili di Domanda**")
+        input_D = st.number_input("Domanda Annua (D)", value=int(calc_D_annua), step=50)
+        input_d = st.number_input("Domanda Media (d) [al giorno]", value=float(round(calc_d_media, 2)), step=1.0)
+        
+    with col_in2:
+        st.markdown("**Variabili di Costo**")
+        input_S = st.number_input("Costo di Setup/Ordine (S) [€]", value=50.0, step=5.0)
+        # Costo di mantenimento calcolato di default al 15% del prezzo
+        input_H = st.number_input("Costo Mantenimento (H) [€/anno]", value=float(round(prezzo_base * 0.15, 2)), step=0.5)
+
+    with col_in3:
+        st.markdown("**Variabili Logistiche e Variabilità**")
+        input_L = st.number_input("Lead Time (L) [giorni]", value=3.0, step=1.0)
+        input_sigma = st.number_input("Variabilità Domanda (σ)", value=float(round(calc_sigma, 2)), step=0.1)
+        livello_servizio = st.selectbox("Livello di Servizio per Z-Score", [90, 95, 99], index=1)
+
+
+    # === 4. CALCOLI ALGORITMO EOQ & ROP ===
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
     z = z_scores[livello_servizio]
 
-    # SCORTA DI SICUREZZA calcolata per coprire la variabilità solo durante il Lead Time
-    scorta_sicurezza = z * sigma * math.sqrt(L)
+    # 1. Calcolo Scorta di Sicurezza: in funzione della variabilità e tempi di consegna
+    scorta_sicurezza = z * input_sigma * math.sqrt(input_L)
     
-    # ROP (Livello di Riordino) = Consumo durante il Lead Time + Scorta di Sicurezza
-    rop = (d_media * L) + scorta_sicurezza
+    # 2. Calcolo Livello di Riordino: ROP = d * L + SS
+    rop = (input_d * input_L) + scorta_sicurezza
     
-    # EOQ (Lotto Economico di Riordino)
-    eoq = math.sqrt((2 * D_annua * costo_ordine) / costo_mantenimento)
-    
-    # LOGICA DI ORDINE EOQ CONTINUA:
-    # Si ordina l'EOQ solo se la giacenza attuale scende sotto o è uguale al Livello di Riordino (ROP)
+    # 3. Calcolo Lotto Economico: EOQ = sqrt((2 * D * S) / H)
+    if input_H > 0:
+        eoq = math.sqrt((2 * input_D * input_S) / input_H)
+    else:
+        eoq = 0
+
+    # Logica Manageriale del Modello:
     if giacenza_attuale <= rop:
         ordine_suggerito = int(eoq)
-        messaggio_ordine = f"⚠️ La giacenza ({giacenza_attuale}) ha raggiunto o superato il Livello di Riordino ({int(rop)}). **Il sistema suggerisce di ordinare il Lotto Economico (EOQ).**"
+        messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza attuale ({giacenza_attuale}) è inferiore o uguale al Livello di Riordino ({int(rop)}). Si suggerisce di emettere un ordine pari all'EOQ."
     else:
         ordine_suggerito = 0
-        messaggio_ordine = f"✅ La giacenza ({giacenza_attuale}) è sopra il Livello di Riordino ({int(rop)}). **Nessun ordine necessario al momento.**"
+        messaggio_ordine = f"✅ **REGOLARE:** La giacenza attuale ({giacenza_attuale}) è superiore al Livello di Riordino ({int(rop)}). Nessun ordine necessario."
 
-    # === 3. VISUALIZZAZIONE SUGGERIMENTI STATISTICI (4 COLONNE) ===
+
+    # === 5. VISUALIZZAZIONE RISULTATI MATEMATICI ===
     st.markdown("<br>", unsafe_allow_html=True)
-    st.subheader("Ordine consigliato tramite Modello EOQ")
+    st.subheader("Risultati Algoritmo EOQ & ROP")
     
-    col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
+    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
-        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Media Giornaliera</div><div class="kpi-valore">{int(d_media)}</div><div class="kpi-dettaglio">Variabilità σ: <b>{sigma:.1f}</b></div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Economico (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Quantità ottimale d'ordine</div></div>""", unsafe_allow_html=True)
     with col_kpi2:
-        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Ottimale (EOQ)</div><div class="kpi-valore">{int(eoq)}</div><div class="kpi-dettaglio">Scatole da ordinare</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Scorta Sicurezza (SS)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura variabilità</div></div>""", unsafe_allow_html=True)
     with col_kpi3:
-        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Livello Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Soglia d'allarme scorte</div></div>""", unsafe_allow_html=True)
-    with col_kpi4:
-        st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Scorta Sicurezza (S)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura Lead Time</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-yellow"><div class="kpi-titolo">Livello Riordino (ROP)</div><div class="kpi-valore">{int(rop)}</div><div class="kpi-dettaglio">Formula: d · L + SS</div></div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # === 4. COMPILAZIONE ORDINE (AUTOCOMPILATA E INVERTITA) ===
-    st.markdown("### 2. Conferma Dati e Inserisci nel Carrello")
+    # === 6. COMPILAZIONE ORDINE FINALE ===
+    st.markdown("### 3. Azione e Carrello")
     
-    # Mostra se bisogna ordinare o no in base alla regola ROP
     if giacenza_attuale <= rop:
         st.warning(messaggio_ordine)
     else:
@@ -295,7 +299,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
 
     col_qta, col_prz = st.columns(2)
     with col_qta:
-        quantita_ordine = st.number_input("Quantità manuale da ordinare (Scatole)", min_value=0, value=ordine_suggerito, step=1)
+        quantita_ordine = st.number_input("Quantità definitiva da ordinare (Scatole)", min_value=0, value=ordine_suggerito, step=1)
     with col_prz:
         prezzo_unitario = st.number_input("Prezzo Unitario Prodotto (€)", value=prezzo_base, step=1.0, disabled=True)
 
@@ -321,7 +325,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.button("RIEPILOGO ORDINE E CARRELLO", on_click=toggle_carrello)
 
 
-    # === 5. CARRELLO E GESTIONE ===
+    # === 7. CARRELLO E GESTIONE ===
     if st.session_state['mostra_carrello']:
         st.markdown("---")
         st.markdown("## Riepilogo Ordine in Corso")
@@ -433,7 +437,7 @@ elif pagina_selezionata == "📋 Inventario":
             st.button("➕ AGGIUNGI PRODOTTO", on_click=toggle_add_prodotto)
             
         with col_btn_del:
-            st.button("🗑️️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
+            st.button("🗑️ CANCELLA PRODOTTO", on_click=toggle_del_prodotto)
             
         with col_btn_save:
             if st.button("💾 SALVA MODIFICHE", type="primary"):
