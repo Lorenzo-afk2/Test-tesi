@@ -114,7 +114,6 @@ if not st.session_state['autenticato']:
 # =====================================================================
 # 3. DATI IN MEMORIA E RANGE DI CONSUMO
 # =====================================================================
-# CORRETTA L'EMOJI DEL CONGELATO PER ESSERE IDENTICA AL SESSION_STATE
 catalogo_prodotti = {
     "❄️ Congelato": ["Hamburger di Manzo 4:1", "Hamburger di Manzo 7:1", "Hamburger di manzo 10:1", "Mc Fries", "McNugget di pollo"],
     "🥬 Fresco": ["Insalata Iceberg", "Insalata Batavia", "Mela", "Ananas", "Actimel"],
@@ -212,7 +211,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         with col_c1:
             st.markdown(f"""<div class="contract-box"><div class="contract-title">Lead Time di Trasporto (L)</div><div class="contract-value">🔒 {int(L)} Giorni</div></div>""", unsafe_allow_html=True)
         with col_c2:
-            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Singolo Ordine / Trasporto (Co)</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
+            st.markdown(f"""<div class="contract-box"><div class="contract-title">Costo Singolo Ordine / Trasporto (S)</div><div class="contract-value">🔒 {costo_ordine} €</div></div>""", unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -241,7 +240,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     # === 3. PANNELLO DI INSERIMENTO DATI (UTENTE) ===
     st.markdown("---")
     st.markdown("### 2. Parametri del Modello Matematico")
-    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni. Il calcolo dell'EOQ incorpora separatamente il Costo di Mantenimento puro e il Rischio di Scadenza (Spoilage Cost).")
+    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni. Il calcolo dell'EOQ incorpora separatamente il Costo di Mantenimento puro e il Tasso di Rischio Scadenza (Spoilage Cost).")
     
     col_in1, col_in2, col_in3 = st.columns(3)
     
@@ -261,12 +260,11 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
             tasso_H = 0.10 # Scaffalature normali
             
         costo_mantenimento_default = float(round(prezzo_base * tasso_H, 2))
-        input_H = st.number_input("Costo Mantenimento (H) [€/anno]", value=costo_mantenimento_default, step=0.5)
+        input_H = st.number_input("Costo Mantenimento (H) [€/scatola/anno]", value=costo_mantenimento_default, step=0.5)
         
-        # Logica rischio scadenza separata
-        tasso_spoilage = 0.75 if reparto_scelto == "🥬 Fresco" else 0.0
-        spoilage_default = float(round(prezzo_base * tasso_spoilage, 2))
-        input_spoilage = st.number_input("Rischio Scadenza [€/anno]", value=spoilage_default, step=0.5)
+        # LOGICA RISCHIO SCADENZA (SPOILAGE) IN PERCENTUALE
+        tasso_spoilage_perc = 75.0 if reparto_scelto == "🥬 Fresco" else 0.0
+        input_spoilage_perc = st.number_input("Rischio Scadenza [% sul prezzo base]", value=tasso_spoilage_perc, step=5.0)
 
     with col_in3:
         st.markdown("**Variabili Logistiche e Variabilità**")
@@ -285,8 +283,11 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     # Livello di Riordino
     rop = (input_d * input_L) + scorta_sicurezza
     
-    # Costo totale denominatore EOQ = Mantenimento + Scadenza
-    H_totale = input_H + input_spoilage
+    # Calcolo costo in Euro del Rischio di Scadenza da sommare ad H
+    valore_spoilage_euro = prezzo_base * (input_spoilage_perc / 100.0)
+    
+    # Costo totale denominatore EOQ = Mantenimento + Valore Spoilage in Euro
+    H_totale = input_H + valore_spoilage_euro
     
     # Lotto Economico (EOQ)
     if H_totale > 0:
