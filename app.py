@@ -182,16 +182,27 @@ if pagina_selezionata == "🏠 Home Page":
     st.title("Dashboard Direzionale | IT-07100-SASSARI")
     st.markdown("#### Benvenuto nel sistema di gestione logistica. Seleziona un modulo dal menu laterale per iniziare.")
     st.markdown("---")
+    
+    # CALCOLO DINAMICO DEL LIVELLO DI SERVIZIO
+    if len(st.session_state['carrello']) > 0:
+        # Estrapola tutti i livelli di servizio salvati nel carrello e ne fa la media
+        livelli_salvati = [item.get("Livello_Servizio", 95) for item in st.session_state['carrello']]
+        livello_medio = sum(livelli_salvati) / len(livelli_salvati)
+    else:
+        # Se il carrello è vuoto, il target standard aziendale è 95%
+        livello_medio = 95.0
+
     st.subheader("Stato Operativo Ristorante")
-    col1, col2, col3, col4 = st.columns(4)
+    
+    # Ora mostriamo SOLO il livello di servizio, pulito ed elegante.
+    col1, _ = st.columns([1, 3])
     with col1:
-        st.markdown("""<div class="card-kpi-mini"><div class="kpi-titolo">Stato Rifornimenti</div><div class="kpi-valore kpi-valore-green">REGOLARE</div></div>""", unsafe_allow_html=True)
-    with col2:
-        st.markdown("""<div class="card-kpi-mini card-kpi-mini-yellow"><div class="kpi-titolo">Prossima Consegna</div><div class="kpi-valore">DOMANI</div></div>""", unsafe_allow_html=True)
-    with col3:
-        st.markdown("""<div class="card-kpi-mini card-kpi-mini-green"><div class="kpi-titolo">Allarmi Scorte</div><div class="kpi-valore kpi-valore-green">0</div></div>""", unsafe_allow_html=True)
-    with col4:
-        st.markdown("""<div class="card-kpi-mini"><div class="kpi-titolo">Livello Servizio</div><div class="kpi-valore">98.5%</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""
+            <div class="card-kpi-mini">
+                <div class="kpi-titolo">Livello Servizio Medio Ordine</div>
+                <div class="kpi-valore">{livello_medio:.1f}%</div>
+            </div>
+        """, unsafe_allow_html=True)
 
 
 # =====================================================================
@@ -240,7 +251,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     # === 3. PANNELLO DI INSERIMENTO DATI (UTENTE) ===
     st.markdown("---")
     st.markdown("### 2. Parametri del Modello Matematico")
-    st.info("💡 **Modalità Analitica:** I campi sono pre-compilati automaticamente analizzando gli ultimi 3 anni. Il calcolo dell'EOQ incorpora separatamente il Costo di Mantenimento puro e il Tasso di Rischio Scadenza (Spoilage Cost).")
+    st.info("💡 **Modalità Analitica:** Per calcolare un lotto economico realistico sui prodotti deperibili, il sistema applica il **Vincolo della Shelf Life**: l'EOQ teorico viene ridotto matematicamente se i giorni di copertura dell'ordine superano i giorni di vita utile del prodotto.")
     
     col_in1, col_in2, col_in3 = st.columns(3)
     
@@ -253,12 +264,10 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.markdown("**Variabili di Costo**")
         input_S = st.number_input("Costo di Setup/Ordine (S) [€]", value=50.0, step=5.0, disabled=True)
         
-        # Logica costo mantenimento puro (spazio/energia)
         tasso_H = 0.25 if reparto_scelto == "❄️ Congelato" else 0.10
         costo_mantenimento_default = float(round(prezzo_base * tasso_H, 2))
         input_H = st.number_input("Costo Mantenimento (H) [€/scatola/anno]", value=costo_mantenimento_default, step=0.5)
         
-        # Rischio Scadenza realistico
         tasso_spoilage_perc = 25.0 if reparto_scelto == "🥬 Fresco" else (2.0 if reparto_scelto == "❄️ Congelato" else 0.0)
         input_spoilage_perc = st.number_input("Rischio Scadenza e Smaltimento [% sul prezzo]", value=tasso_spoilage_perc, step=1.0)
 
@@ -266,57 +275,45 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
         st.markdown("**Variabili Logistiche e Variabilità**")
         input_L = st.number_input("Lead Time (L) [giorni]", value=3.0, step=1.0, disabled=True)
         input_sigma = st.number_input("Variabilità Domanda (σ)", value=float(round(calc_sigma, 2)), step=0.1)
+        livello_servizio = st.selectbox("Livello di Servizio per Z-Score", [90, 95, 99], index=1)
         
-        # VARIABILE SHELF LIFE: VISIBILE SOLO PER DEPERIBILI
-        if reparto_scelto in ["🥬 Fresco", "❄️️ Congelato"]:
+        if reparto_scelto in ["🥬 Fresco", "❄️ Congelato"]:
             shelf_life_default = 5 if reparto_scelto == "🥬 Fresco" else 90
             input_shelf_life = st.number_input("Scadenza Massima [Giorni]", value=int(shelf_life_default), step=1)
         else:
-            # Per Secco e Operativo il vincolo è disattivato (valore infinito)
             input_shelf_life = 99999
 
 
     # === 4. CALCOLI ALGORITMO EOQ & ROP CON VINCOLO DI SHELF LIFE ===
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
-    livello_servizio = 95 # Fisso a standard aziendale per non appesantire l'interfaccia
     z = z_scores[livello_servizio]
 
-    # Scorta di Sicurezza
     scorta_sicurezza = z * input_sigma * math.sqrt(input_L)
-    
-    # Livello di Riordino
     rop = (input_d * input_L) + scorta_sicurezza
     
-    # Calcolo Costo Totale (H) = Mantenimento + Spoilage
     valore_spoilage_euro = prezzo_base * (input_spoilage_perc / 100.0)
     H_totale = input_H + valore_spoilage_euro
     
-    # CALCOLO EOQ TEORICO
     if H_totale > 0:
         eoq_teorico = math.sqrt((2 * input_D * input_S) / H_totale)
     else:
         eoq_teorico = 0
         
-    # APPLICAZIONE DEL VINCOLO DI SHELF LIFE
     giorni_copertura_eoq = eoq_teorico / input_d if input_d > 0 else 0
+    vincolo_applicato = False
 
-    # Se l'EOQ teorico supera i giorni in cui il prodotto va a male, si taglia l'EOQ.
     if giorni_copertura_eoq > input_shelf_life:
         eoq_corretto = input_d * input_shelf_life
+        vincolo_applicato = True
     else:
         eoq_corretto = eoq_teorico
 
-    # Logica Manageriale e Messaggi Puliti
+    # Logica Manageriale con dicitura perfetta
     if giacenza_attuale <= rop:
         ordine_suggerito = int(eoq_corretto)
-        
-        # Scegli la parola corretta per definire lo stato della giacenza
-        if giacenza_attuale < int(rop):
-            stato_giacenza = "inferiore al"
-        else:
-            stato_giacenza = "uguale al"
+        stato_giacenza = "inferiore" if giacenza_attuale < int(rop) else "uguale"
             
-        messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è {stato_giacenza} Livello di Riordino ({int(rop)}). Si suggerisce di ordinare **{ordine_suggerito} scatole**."
+        messaggio_ordine = f"⚠️ **ATTENZIONE:** La giacenza ({giacenza_attuale}) è {stato_giacenza} al Livello di Riordino ({int(rop)}). Si suggerisce di ordinare **{ordine_suggerito} scatole**."
     else:
         ordine_suggerito = 0
         messaggio_ordine = f"✅ **REGOLARE:** La giacenza attuale ({giacenza_attuale}) è superiore al Livello di Riordino ({int(rop)}). Nessun ordine necessario."
@@ -328,7 +325,7 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
     
     col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
     with col_kpi1:
-        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Economico (EOQ)</div><div class="kpi-valore">{int(eoq_corretto)}</div><div class="kpi-dettaglio">Quantità ottimale d'ordine</div></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="card-kpi card-kpi-green"><div class="kpi-titolo">Lotto Economico (EOQ)</div><div class="kpi-valore">{int(eoq_corretto)}</div><div class="kpi-dettaglio">{"(Limitato dalla Scadenza)" if vincolo_applicato else "Quantità ottimale d'ordine"}</div></div>""", unsafe_allow_html=True)
     with col_kpi2:
         st.markdown(f"""<div class="card-kpi"><div class="kpi-titolo">Scorta Sicurezza (SS)</div><div class="kpi-valore">{int(scorta_sicurezza)}</div><div class="kpi-dettaglio">Copertura variabilità</div></div>""", unsafe_allow_html=True)
     with col_kpi3:
@@ -361,7 +358,8 @@ elif pagina_selezionata == "📦 Compilazione Ordine":
                     "Prodotto": prodotto_scelto,
                     "Quantità": quantita_ordine,
                     "Prezzo Unit.": f"{prezzo_unitario:.2f} €",
-                    "Totale": quantita_ordine * prezzo_unitario
+                    "Totale": quantita_ordine * prezzo_unitario,
+                    "Livello_Servizio": livello_servizio # SALVA IL LIVELLO SCELTO
                 })
                 st.session_state['mostra_carrello'] = True
                 st.success(f"Dato acquisito. {quantita_ordine} scatole di '{prodotto_scelto}' in distinta.")
