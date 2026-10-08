@@ -185,21 +185,20 @@ if pagina_selezionata == "🏠 Home Page":
     
     # CALCOLO DINAMICO DEL LIVELLO DI SERVIZIO
     if len(st.session_state['carrello']) > 0:
-        # Estrapola tutti i livelli di servizio salvati nel carrello e ne fa la media
         livelli_salvati = [item.get("Livello_Servizio", 95) for item in st.session_state['carrello']]
         livello_medio = sum(livelli_salvati) / len(livelli_salvati)
     else:
-        # Se il carrello è vuoto, il target standard aziendale è 95%
         livello_medio = 95.0
 
     st.subheader("Stato Operativo Ristorante")
     
-    # Ora mostriamo SOLO il livello di servizio, pulito ed elegante.
-    col1, _ = st.columns([1, 3])
-    with col1:
+    # CENTRAGGIO DEL KPI (1 spazio vuoto a sx, 1 spazio centrale, 1 spazio vuoto a dx)
+    col_vuota_sx, col_centro, col_vuota_dx = st.columns([1, 1, 1])
+    
+    with col_centro:
         st.markdown(f"""
             <div class="card-kpi-mini">
-                <div class="kpi-titolo">Livello Servizio Medio Ordine</div>
+                <div class="kpi-titolo">Livello Servizio Medio Ristorante</div>
                 <div class="kpi-valore">{livello_medio:.1f}%</div>
             </div>
         """, unsafe_allow_html=True)
